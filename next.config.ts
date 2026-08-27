@@ -137,7 +137,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
 
   // 🔥 SWC minification
-  swcMinify: true,
+  //swcMinify: true,
 
   // 🔥 Trailing slashes
   trailingSlash: false,
