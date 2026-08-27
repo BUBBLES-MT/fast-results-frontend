@@ -1,13 +1,15 @@
-"use client"
+// app/payment/page.tsx
 
-import { useState, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import axios from "axios"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
+"use client";
+
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import axios from "axios";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +17,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   CreditCard,
   School,
@@ -42,12 +44,12 @@ import {
   Waves,
   Cloud,
   TrendingDown,
-} from "lucide-react"
+} from "lucide-react";
 
 // ============================================================
 // 🔥 CONSTANTS
 // ============================================================
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 // 🔥 SUBSCRIPTION PLANS - BEI MPYA!
 const SUBSCRIPTION_PLANS = [
@@ -156,7 +158,7 @@ const SUBSCRIPTION_PLANS = [
     tagColor: "bg-gradient-to-r from-emerald-500 to-teal-500 text-white",
     discount: "Save 10%",
   },
-]
+];
 
 // ============================================================
 // 🔥 PAYMENT METHODS
@@ -186,44 +188,44 @@ const PAYMENT_METHODS = [
     icon: Smartphone,
     color: "bg-purple-50 text-purple-700 border-purple-200 hover:border-purple-400",
   },
-]
+];
 
 // ============================================================
 // 🔥 HELPER - GET SCHOOL LEVEL DISPLAY
 // ============================================================
 const getSchoolLevelDisplay = (level: string | undefined): string => {
-  if (!level) return "School"
+  if (!level) return "School";
   const levels: Record<string, string> = {
-    "primary": "Primary",
-    "secondary": "Secondary",
-    "advanced": "Advanced"
-  }
-  return levels[level.toLowerCase()] || "School"
-}
+    primary: "Primary",
+    secondary: "Secondary",
+    advanced: "Advanced",
+  };
+  return levels[level.toLowerCase()] || "School";
+};
 
 // ============================================================
-// 🔥 MAIN COMPONENT
+// 🔥 🔥 🔥 PAYMENT CONTENT COMPONENT (Wrapped in Suspense)
 // ============================================================
-export default function PaymentPage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const schoolId = searchParams.get("school_id")
-  
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
-  const [school, setSchool] = useState<any>(null)
-  const [selectedPlan, setSelectedPlan] = useState(SUBSCRIPTION_PLANS[1])
-  const [selectedMethod, setSelectedMethod] = useState("mpesa")
-  const [phoneNumber, setPhoneNumber] = useState("")
-  const [customerName, setCustomerName] = useState("")
-  const [customerEmail, setCustomerEmail] = useState("")
-  const [agreeTerms, setAgreeTerms] = useState(false)
-  
-  const [processing, setProcessing] = useState(false)
-  const [paymentDialog, setPaymentDialog] = useState(false)
-  const [paymentStatus, setPaymentStatus] = useState<"idle" | "processing" | "success" | "failed">("idle")
-  const [transactionId, setTransactionId] = useState("")
-  const [progress, setProgress] = useState(0)
+function PaymentContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const schoolId = searchParams.get("school_id");
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [school, setSchool] = useState<any>(null);
+  const [selectedPlan, setSelectedPlan] = useState(SUBSCRIPTION_PLANS[1]);
+  const [selectedMethod, setSelectedMethod] = useState("mpesa");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [agreeTerms, setAgreeTerms] = useState(false);
+
+  const [processing, setProcessing] = useState(false);
+  const [paymentDialog, setPaymentDialog] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<"idle" | "processing" | "success" | "failed">("idle");
+  const [transactionId, setTransactionId] = useState("");
+  const [progress, setProgress] = useState(0);
 
   // ============================================================
   // 🔥 FETCH SCHOOL INFO
@@ -231,118 +233,118 @@ export default function PaymentPage() {
   useEffect(() => {
     const fetchSchool = async () => {
       if (!schoolId) {
-        setError("No school selected. Please login first.")
-        setLoading(false)
-        return
+        setError("No school selected. Please login first.");
+        setLoading(false);
+        return;
       }
-      
+
       try {
-        let token = localStorage.getItem("token")
-        
+        let token = localStorage.getItem("token");
+
         if (!token) {
-          const cookies = document.cookie.split(';')
+          const cookies = document.cookie.split(";");
           for (const cookie of cookies) {
-            const [name, value] = cookie.trim().split('=')
-            if (name === 'token') {
-              token = decodeURIComponent(value)
+            const [name, value] = cookie.trim().split("=");
+            if (name === "token") {
+              token = decodeURIComponent(value);
               if (token) {
-                localStorage.setItem("token", token)
+                localStorage.setItem("token", token);
               }
-              break
+              break;
             }
           }
         }
-        
+
         if (!token) {
-          console.warn("⚠️ No token found, using school from URL params")
+          console.warn("⚠️ No token found, using school from URL params");
           setSchool({
             id: parseInt(schoolId),
             name: sessionStorage.getItem("expired_school_name") || "Shule yako",
-            school_level: "secondary"
-          })
-          setLoading(false)
-          return
+            school_level: "secondary",
+          });
+          setLoading(false);
+          return;
         }
-        
-        const response = await axios.get(
-          `${API_BASE_URL}/api/v1/schools/${schoolId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        
-        // ✅ LOG DATA KWA KUANGALIA
-        console.log("🔍 School data received:", response.data)
-        console.log("🔍 School level:", response.data.school_level)
-        
-        setSchool(response.data)
-        
-        const userName = localStorage.getItem("user_name")
+
+        const response = await axios.get(`${API_BASE_URL}/api/v1/schools/${schoolId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        console.log("🔍 School data received:", response.data);
+        console.log("🔍 School level:", response.data.school_level);
+
+        setSchool(response.data);
+
+        const userName = localStorage.getItem("user_name");
         if (userName) {
-          setCustomerName(userName)
+          setCustomerName(userName);
         }
-        
-        setLoading(false)
+
+        setLoading(false);
       } catch (err: any) {
-        console.error("Error fetching school:", err)
+        console.error("Error fetching school:", err);
         setSchool({
           id: parseInt(schoolId),
           name: sessionStorage.getItem("expired_school_name") || "Shule yako",
-          school_level: "secondary"
-        })
-        setLoading(false)
+          school_level: "secondary",
+        });
+        setLoading(false);
       }
-    }
-    
-    fetchSchool()
-  }, [schoolId, router])
+    };
+
+    fetchSchool();
+  }, [schoolId]);
 
   // ============================================================
   // 🔥 HANDLE PAYMENT
   // ============================================================
   const handlePayment = async () => {
     if (!phoneNumber || phoneNumber.length < 10) {
-      setError("Tafadhali ingiza namba sahihi ya simu (e.g., 0712345678)")
-      return
+      setError("Tafadhali ingiza namba sahihi ya simu (e.g., 0712345678)");
+      return;
     }
-    
+
     if (!agreeTerms) {
-      setError("Tafadhali kubali masharti na maelezo")
-      return
+      setError("Tafadhali kubali masharti na maelezo");
+      return;
     }
-    
-    setProcessing(true)
-    setError("")
-    setPaymentStatus("processing")
-    setPaymentDialog(true)
-    setProgress(0)
-    
+
+    setProcessing(true);
+    setError("");
+    setPaymentStatus("processing");
+    setPaymentDialog(true);
+    setProgress(0);
+
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 95) {
-          clearInterval(progressInterval)
-          return 95
+          clearInterval(progressInterval);
+          return 95;
         }
-        return prev + 5
-      })
-    }, 500)
-    
+        return prev + 5;
+      });
+    }, 500);
+
     try {
-      const token = localStorage.getItem("token")
-      
+      const token = localStorage.getItem("token");
+
       if (!token) {
-        console.warn("⚠️ No token for payment, using fallback")
-        await new Promise(resolve => setTimeout(resolve, 3000))
-        clearInterval(progressInterval)
-        setProgress(100)
-        setPaymentStatus("success")
-        setTransactionId("TXN-" + Date.now().toString().slice(-8))
-        
+        console.warn("⚠️ No token for payment, using fallback");
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        clearInterval(progressInterval);
+        setProgress(100);
+        setPaymentStatus("success");
+        setTransactionId("TXN-" + Date.now().toString().slice(-8));
+
         setTimeout(() => {
-          router.push(`/payment/success?transaction_id=${transactionId}&plan=${selectedPlan.id}&amount=${selectedPlan.price}`)
-        }, 1500)
-        setProcessing(false)
-        return
+          router.push(
+            `/payment/success?transaction_id=${transactionId}&plan=${selectedPlan.id}&amount=${selectedPlan.price}`
+          );
+        }, 1500);
+        setProcessing(false);
+        return;
       }
-      
+
       const response = await axios.post(
         `${API_BASE_URL}/api/v1/payments/initiate`,
         {
@@ -355,45 +357,46 @@ export default function PaymentPage() {
           payment_method: selectedMethod,
         },
         { headers: { Authorization: `Bearer ${token}` } }
-      )
-      
-      const transaction = response.data
-      setTransactionId(transaction.id)
-      
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      clearInterval(progressInterval)
-      setProgress(100)
-      
-      setPaymentStatus("success")
-      
+      );
+
+      const transaction = response.data;
+      setTransactionId(transaction.id);
+
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      clearInterval(progressInterval);
+      setProgress(100);
+
+      setPaymentStatus("success");
+
       setTimeout(() => {
-        router.push(`/payment/success?transaction_id=${transaction.id}&plan=${selectedPlan.id}&amount=${selectedPlan.price}`)
-      }, 1500)
-      
+        router.push(
+          `/payment/success?transaction_id=${transaction.id}&plan=${selectedPlan.id}&amount=${selectedPlan.price}`
+        );
+      }, 1500);
     } catch (err: any) {
-      clearInterval(progressInterval)
-      setPaymentStatus("failed")
-      setError(err.response?.data?.detail || "Payment failed. Please try again.")
+      clearInterval(progressInterval);
+      setPaymentStatus("failed");
+      setError(err.response?.data?.detail || "Payment failed. Please try again.");
     } finally {
-      setProcessing(false)
+      setProcessing(false);
     }
-  }
+  };
 
   // ============================================================
   // 🔥 CALCULATE SAVINGS
   // ============================================================
-  const calculateSavings = (plan: typeof SUBSCRIPTION_PLANS[0]) => {
-    if (plan.id === "monthly") return 0
-    const monthlyCost = 20000 * (plan.days / 30)
-    return Math.round(monthlyCost - plan.price)
-  }
+  const calculateSavings = (plan: (typeof SUBSCRIPTION_PLANS)[0]) => {
+    if (plan.id === "monthly") return 0;
+    const monthlyCost = 20000 * (plan.days / 30);
+    return Math.round(monthlyCost - plan.price);
+  };
 
-  const getSavingsPercentage = (plan: typeof SUBSCRIPTION_PLANS[0]) => {
-    if (plan.id === "monthly") return 0
-    const monthlyCost = 20000 * (plan.days / 30)
-    if (monthlyCost <= 0) return 0
-    return Math.round(((monthlyCost - plan.price) / monthlyCost) * 100)
-  }
+  const getSavingsPercentage = (plan: (typeof SUBSCRIPTION_PLANS)[0]) => {
+    if (plan.id === "monthly") return 0;
+    const monthlyCost = 20000 * (plan.days / 30);
+    if (monthlyCost <= 0) return 0;
+    return Math.round(((monthlyCost - plan.price) / monthlyCost) * 100);
+  };
 
   // ============================================================
   // 🔥 RENDER
@@ -409,7 +412,7 @@ export default function PaymentPage() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (error && !school) {
@@ -422,9 +425,7 @@ export default function PaymentPage() {
             </div>
             <h1 className="text-2xl font-bold text-amber-700 mb-2">Payment Error</h1>
             <p className="text-gray-600">{error}</p>
-            <p className="text-sm text-gray-500 mt-2">
-              Please make sure you have selected a valid school.
-            </p>
+            <p className="text-sm text-gray-500 mt-2">Please make sure you have selected a valid school.</p>
             <Button
               onClick={() => router.push("/login")}
               className="mt-6 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 shadow-lg"
@@ -435,7 +436,7 @@ export default function PaymentPage() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -453,7 +454,7 @@ export default function PaymentPage() {
       </div>
 
       <div className="max-w-7xl mx-auto relative z-10">
-        {/* Header - FIXED HYDRATION ERROR + SCHOOL LEVEL! */}
+        {/* Header */}
         <div className="mb-8">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -467,7 +468,6 @@ export default function PaymentPage() {
                 <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-800 via-purple-800 to-indigo-800 bg-clip-text text-transparent">
                   Premium Subscription
                 </h1>
-                {/* ✅ FIXED: School level inaonyeshwa sahihi! */}
                 <div className="flex items-center gap-2 flex-wrap mt-1">
                   <Building2 className="h-4 w-4 text-gray-500" />
                   <span className="text-sm text-gray-500">
@@ -505,14 +505,14 @@ export default function PaymentPage() {
                   Flexible Options
                 </Badge>
               </h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {SUBSCRIPTION_PLANS.map((plan) => {
-                  const isSelected = selectedPlan.id === plan.id
-                  const savings = calculateSavings(plan)
-                  const savingsPercentage = getSavingsPercentage(plan)
-                  const Icon = plan.icon
-                  
+                  const isSelected = selectedPlan.id === plan.id;
+                  const savings = calculateSavings(plan);
+                  const savingsPercentage = getSavingsPercentage(plan);
+                  const Icon = plan.icon;
+
                   return (
                     <Card
                       key={plan.id}
@@ -527,14 +527,14 @@ export default function PaymentPage() {
                         <div className="flex items-start justify-between">
                           <div>
                             <CardTitle className="text-lg flex items-center gap-2">
-                              <Icon className={`h-5 w-5 bg-gradient-to-r ${plan.color} bg-clip-text text-transparent`} />
+                              <Icon
+                                className={`h-5 w-5 bg-gradient-to-r ${plan.color} bg-clip-text text-transparent`}
+                              />
                               {plan.name}
                             </CardTitle>
                             <CardDescription className="text-sm">{plan.description}</CardDescription>
                           </div>
-                          <Badge className={plan.tagColor}>
-                            {plan.tag}
-                          </Badge>
+                          <Badge className={plan.tagColor}>{plan.tag}</Badge>
                         </div>
                       </CardHeader>
                       <CardContent>
@@ -586,7 +586,7 @@ export default function PaymentPage() {
                         )}
                       </CardFooter>
                     </Card>
-                  )
+                  );
                 })}
               </div>
             </div>
@@ -612,12 +612,18 @@ export default function PaymentPage() {
                     }`}
                     onClick={() => setSelectedMethod(method.id)}
                   >
-                    <method.icon className={`h-8 w-8 mx-auto mb-2 ${
-                      selectedMethod === method.id ? "text-purple-600" : "text-gray-400"
-                    }`} />
-                    <p className={`text-sm font-medium ${
-                      selectedMethod === method.id ? "text-purple-700" : "text-gray-600"
-                    }`}>{method.name}</p>
+                    <method.icon
+                      className={`h-8 w-8 mx-auto mb-2 ${
+                        selectedMethod === method.id ? "text-purple-600" : "text-gray-400"
+                      }`}
+                    />
+                    <p
+                      className={`text-sm font-medium ${
+                        selectedMethod === method.id ? "text-purple-700" : "text-gray-600"
+                      }`}
+                    >
+                      {method.name}
+                    </p>
                     {selectedMethod === method.id && (
                       <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs mt-1">
                         <Check className="h-3 w-3 mr-1" />
@@ -653,9 +659,7 @@ export default function PaymentPage() {
                     <div>
                       <p className="text-xs text-purple-500 font-medium">School</p>
                       <p className="font-semibold text-gray-800">{school?.name}</p>
-                      <p className="text-xs text-gray-500">
-                        {getSchoolLevelDisplay(school?.school_level)} School
-                      </p>
+                      <p className="text-xs text-gray-500">{getSchoolLevelDisplay(school?.school_level)} School</p>
                     </div>
                   </div>
                 </div>
@@ -731,7 +735,7 @@ export default function PaymentPage() {
                     className="mt-1 h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
                   />
                   <Label htmlFor="terms" className="text-xs text-gray-500 cursor-pointer leading-relaxed">
-                    I agree to the <span className="text-purple-600 hover:underline">Terms & Conditions</span> and 
+                    I agree to the <span className="text-purple-600 hover:underline">Terms & Conditions</span> and
                     <span className="text-purple-600 hover:underline"> Privacy Policy</span>. Payments are non-refundable.
                   </Label>
                 </div>
@@ -750,14 +754,10 @@ export default function PaymentPage() {
                   disabled={processing || !agreeTerms}
                   className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 hover:from-purple-700 hover:via-pink-700 hover:to-indigo-700 shadow-lg shadow-purple-500/30 text-white text-lg py-6"
                 >
-                  {processing ? (
-                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                  ) : (
-                    <DollarSign className="h-5 w-5 mr-2" />
-                  )}
+                  {processing ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <DollarSign className="h-5 w-5 mr-2" />}
                   {processing ? "Processing..." : `Pay ${selectedPlan.price_display}`}
                 </Button>
-                
+
                 <div className="flex items-center justify-center gap-4 mt-3 text-xs text-gray-400">
                   <span className="flex items-center gap-1">
                     <Lock className="h-3 w-3" />
@@ -820,9 +820,9 @@ export default function PaymentPage() {
                   <Button
                     variant="outline"
                     onClick={() => {
-                      setPaymentDialog(false)
-                      setPaymentStatus("idle")
-                      setError("")
+                      setPaymentDialog(false);
+                      setPaymentStatus("idle");
+                      setError("");
                     }}
                     className="mt-4 border-red-300 text-red-600 hover:bg-red-50"
                   >
@@ -835,5 +835,29 @@ export default function PaymentPage() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
+}
+
+// ============================================================
+// 🔥 🔥 🔥 MAIN PAGE - WITH SUSPENSE BOUNDARY
+// ============================================================
+
+export default function PaymentPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+          <div className="text-center">
+            <Loader2 className="h-20 w-20 animate-spin text-purple-400 mx-auto" />
+            <p className="text-white/80 mt-6 text-lg font-medium">Loading Payment...</p>
+            <div className="mt-4 h-1 w-48 mx-auto bg-white/10 rounded-full overflow-hidden">
+              <div className="h-full w-1/2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-pulse" />
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <PaymentContent />
+    </Suspense>
+  );
 }
