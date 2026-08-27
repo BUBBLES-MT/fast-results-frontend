@@ -1,10 +1,12 @@
-"use client"
+// app/payment/canceled/page.tsx
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+"use client";
+
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   XCircle,
   RefreshCw,
@@ -24,7 +26,8 @@ import {
   ChevronDown,
   ShieldCheck,
   Lock,
-} from "lucide-react"
+  Loader2,
+} from "lucide-react";
 
 // ============================================================
 // 🔥 HELP CENTER OPTIONS
@@ -62,41 +65,55 @@ const HELP_OPTIONS = [
     color: "bg-amber-50 text-amber-600 border-amber-200",
     action: () => window.open("/faq", "_blank"),
   },
-]
+];
 
 // ============================================================
-// 🔥 MAIN COMPONENT
+// 🔥 🔥 🔥 CANCELED CONTENT COMPONENT
 // ============================================================
-export default function PaymentCanceledPage() {
-  const router = useRouter()
-  const [showHelp, setShowHelp] = useState(false)
-  const [copied, setCopied] = useState(false)
-  const [countdown, setCountdown] = useState(3)
+
+function CanceledContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [showHelp, setShowHelp] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [countdown, setCountdown] = useState(3);
+
+  // ✅ Get params safely
+  const reason = searchParams.get("reason") || "Payment was canceled by user.";
+  const plan = searchParams.get("plan") || "";
+  const schoolName = searchParams.get("school_name") || "";
 
   // Auto-redirect to payment after 10 seconds
   useEffect(() => {
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          clearInterval(timer)
-          return 0
+          clearInterval(timer);
+          return 0;
         }
-        return prev - 1
-      })
-    }, 1000)
+        return prev - 1;
+      });
+    }, 1000);
 
-    return () => clearInterval(timer)
-  }, [])
+    const redirectTimer = setTimeout(() => {
+      router.push("/payment");
+    }, 10000);
+
+    return () => {
+      clearInterval(timer);
+      clearTimeout(redirectTimer);
+    };
+  }, [router]);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(window.location.href)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const handleTryAgain = () => {
-    router.push("/payment")
-  }
+    router.push("/payment");
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-100 via-orange-100 to-amber-100 p-4 relative overflow-hidden">
@@ -147,6 +164,29 @@ export default function PaymentCanceledPage() {
             </Badge>
           </div>
 
+          {/* School & Plan Info */}
+          {(schoolName || plan) && (
+            <div className="bg-white/60 rounded-xl p-4 border border-gray-200">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                {schoolName && (
+                  <div>
+                    <p className="text-gray-400">School</p>
+                    <p className="font-medium text-gray-700">{schoolName}</p>
+                  </div>
+                )}
+                {plan && (
+                  <div>
+                    <p className="text-gray-400">Plan</p>
+                    <p className="font-medium text-gray-700 capitalize">{plan}</p>
+                  </div>
+                )}
+              </div>
+              <div className="mt-2 text-xs text-gray-400">
+                <p><strong>Reason:</strong> {reason}</p>
+              </div>
+            </div>
+          )}
+
           {/* What Happened Section */}
           <div className="bg-gradient-to-br from-rose-50/80 to-amber-50/80 rounded-2xl p-6 border border-rose-200/50 shadow-sm">
             <div className="flex items-start gap-4">
@@ -190,7 +230,10 @@ export default function PaymentCanceledPage() {
                   Don't worry! You can try again or explore other options:
                 </p>
                 <div className="mt-3 space-y-2">
-                  <div className="flex items-center gap-3 bg-white/60 rounded-xl p-3 hover:bg-white/80 transition-colors cursor-pointer" onClick={handleTryAgain}>
+                  <div
+                    className="flex items-center gap-3 bg-white/60 rounded-xl p-3 hover:bg-white/80 transition-colors cursor-pointer"
+                    onClick={handleTryAgain}
+                  >
                     <RefreshCw className="h-4 w-4 text-amber-600" />
                     <div>
                       <p className="text-sm font-medium text-amber-700">Try Again</p>
@@ -198,7 +241,10 @@ export default function PaymentCanceledPage() {
                     </div>
                     <ChevronRight className="h-4 w-4 text-amber-400 ml-auto" />
                   </div>
-                  <div className="flex items-center gap-3 bg-white/60 rounded-xl p-3 hover:bg-white/80 transition-colors cursor-pointer" onClick={() => router.push("/payment/history")}>
+                  <div
+                    className="flex items-center gap-3 bg-white/60 rounded-xl p-3 hover:bg-white/80 transition-colors cursor-pointer"
+                    onClick={() => router.push("/payment/history")}
+                  >
                     <Clock className="h-4 w-4 text-amber-600" />
                     <div>
                       <p className="text-sm font-medium text-amber-700">View History</p>
@@ -224,14 +270,18 @@ export default function PaymentCanceledPage() {
                   24/7 Support
                 </Badge>
               </div>
-              <ChevronDown className={`h-5 w-5 text-gray-400 transition-transform duration-300 ${showHelp ? 'rotate-180' : ''}`} />
+              <ChevronDown
+                className={`h-5 w-5 text-gray-400 transition-transform duration-300 ${
+                  showHelp ? "rotate-180" : ""
+                }`}
+              />
             </button>
-            
+
             {showHelp && (
               <div className="p-4 pt-0 border-t border-gray-100 animate-slideDown">
                 <div className="grid grid-cols-2 gap-3 mt-4">
                   {HELP_OPTIONS.map((option) => {
-                    const Icon = option.icon
+                    const Icon = option.icon;
                     return (
                       <button
                         key={option.id}
@@ -242,7 +292,7 @@ export default function PaymentCanceledPage() {
                         <p className="font-medium text-sm">{option.label}</p>
                         <p className="text-xs opacity-70 mt-1">{option.description}</p>
                       </button>
-                    )
+                    );
                   })}
                 </div>
               </div>
@@ -329,16 +379,33 @@ export default function PaymentCanceledPage() {
       {/* Custom Animations */}
       <style jsx global>{`
         @keyframes slideUp {
-          from { opacity: 0; transform: translateY(40px); }
-          to { opacity: 1; transform: translateY(0); }
+          from {
+            opacity: 0;
+            transform: translateY(40px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
         @keyframes slideDown {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
         @keyframes float-slow {
-          0%, 100% { transform: translateY(0px) scale(1); }
-          50% { transform: translateY(-20px) scale(1.02); }
+          0%,
+          100% {
+            transform: translateY(0px) scale(1);
+          }
+          50% {
+            transform: translateY(-20px) scale(1.02);
+          }
         }
         .animate-slideUp {
           animation: slideUp 0.6s ease-out;
@@ -357,5 +424,29 @@ export default function PaymentCanceledPage() {
         }
       `}</style>
     </div>
-  )
+  );
+}
+
+// ============================================================
+// 🔥 🔥 🔥 MAIN PAGE - WITH SUSPENSE BOUNDARY
+// ============================================================
+
+export default function PaymentCanceledPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-100 via-orange-100 to-amber-100">
+          <div className="text-center">
+            <Loader2 className="h-20 w-20 animate-spin text-amber-500 mx-auto" />
+            <p className="text-gray-600 mt-6 text-lg font-medium">Loading...</p>
+            <div className="mt-4 h-1 w-48 mx-auto bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-full w-1/2 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full animate-pulse" />
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <CanceledContent />
+    </Suspense>
+  );
 }
