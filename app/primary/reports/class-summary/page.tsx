@@ -53,8 +53,20 @@ interface SubjectGradeSummary {
     D: number;
     E: number;
   };
-  position?: number;  // 🔥 NAFASI YA SOMO
-  gpa?: number;       // 🔥 GPA (kwa mahesabu tu, haionyeshwi)
+  position?: number;
+  gpa?: number;
+}
+
+// 🔥 FIXED: DivisionSummary interface with proper types
+interface DivisionSummary {
+  A: { M: number; F: number };
+  B: { M: number; F: number };
+  C: { M: number; F: number };
+  D: { M: number; F: number };
+  E: { M: number; F: number };
+  total_male: number;
+  total_female: number;
+  total_students: number;
 }
 
 interface SummaryData {
@@ -63,16 +75,7 @@ interface SummaryData {
   class_name: string;
   exam_type: string;
   year: number;
-  division_summary: {
-    A: { M: number; F: number };
-    B: { M: number; F: number };
-    C: { M: number; F: number };
-    D: { M: number; F: number };
-    E: { M: number; F: number };
-    total_male: number;
-    total_female: number;
-    total_students: number;
-  };
+  division_summary: DivisionSummary;
   registration_summary: {
     male_reg: number;
     female_reg: number;
@@ -95,17 +98,6 @@ interface SummaryData {
 
 // 🔥 PRIMARY EXAM TYPES
 const AINA_ZAMTIHANI_CHAGUO = ["MIDTERM3", "MIDTERM9", "TERMINAL", "ANNUAL"];
-
-// 🔥 PRIMARY CLASSES - DARASA LA 1 HADI 7
-const DARASA_ZA_MSINGI = [
-  { id: 1, name: "Darasa la I" },
-  { id: 2, name: "Darasa la II" },
-  { id: 3, name: "Darasa la III" },
-  { id: 4, name: "Darasa la IV" },
-  { id: 5, name: "Darasa la V" },
-  { id: 6, name: "Darasa la VI" },
-  { id: 7, name: "Darasa la VII" },
-];
 
 export default function MuhtasariWaMatokeoYaDarasaPage() {
   const router = useRouter();
@@ -139,7 +131,6 @@ export default function MuhtasariWaMatokeoYaDarasaPage() {
       return;
     }
     
-    // 🔥 PRIMARY ROLES
     const allowedRoles = ["Mwalimu Mkuu", "Mwalimu Mkuu Msaidizi", "Mtaaluma", "Mwalimu"];
     const userRoleLower = (role || "").toLowerCase();
     const isAllowed = allowedRoles.some(r => r.toLowerCase() === userRoleLower);
@@ -156,7 +147,7 @@ export default function MuhtasariWaMatokeoYaDarasaPage() {
   }, [router]);
 
   // ================================
-  // 🔥 FETCH CLASSES - PRIMARY (DARASA 1-7)
+  // 🔥 FETCH CLASSES
   // ================================
 
   const fetchClasses = async (authToken: string) => {
@@ -172,7 +163,6 @@ export default function MuhtasariWaMatokeoYaDarasaPage() {
       
       if (response.ok) {
         const data = await response.json();
-        // 🔥 FILTER - TUONYESHE DARASA LA 1 HADI 7 PEKEE
         const primaryClasses = data.filter((cls: SchoolClass) => {
           const name = cls.name.toLowerCase();
           return name.includes("std") || 
@@ -209,8 +199,6 @@ export default function MuhtasariWaMatokeoYaDarasaPage() {
       const schoolId = localStorage.getItem("school_id") || "4";
       const url = `${API_BASE_URL}/api/v1/primary/marks/exam-types?school_id=${schoolId}`;
       
-      console.log("📤 Fetching exam types:", url);
-      
       const response = await fetch(url, {
         headers: { 
           Authorization: `Bearer ${authToken}`,
@@ -225,9 +213,7 @@ export default function MuhtasariWaMatokeoYaDarasaPage() {
         if (types.length > 0 && !selectedExamType) {
           setSelectedExamType(types[0]);
         }
-        console.log("📋 Primary exam types loaded:", types);
       } else {
-        console.warn("⚠️ Using default exam types");
         setExamTypes(AINA_ZAMTIHANI_CHAGUO);
         setSelectedExamType(AINA_ZAMTIHANI_CHAGUO[0]);
       }
@@ -241,11 +227,10 @@ export default function MuhtasariWaMatokeoYaDarasaPage() {
   };
 
   // ================================
-  // 🔥 CALCULATE SUBJECT POSITIONS (NAFASI YA SOMO)
+  // 🔥 CALCULATE SUBJECT POSITIONS
   // ================================
 
   const calculateSubjectPositions = (subjectGradeSummary: SubjectGradeSummary[]): SubjectGradeSummary[] => {
-    // 🔥 Hesabu GPA kwa kila somo
     const gradePoints: { [key: string]: number } = { A: 1, B: 2, C: 3, D: 4, E: 5 };
     
     const withGPA = subjectGradeSummary.map((item) => {
@@ -268,7 +253,6 @@ export default function MuhtasariWaMatokeoYaDarasaPage() {
       };
     });
     
-    // 🔥 SORT BY GPA (NDOGO ZAIDI = NAFASI YA KWANZA)
     const sorted = [...withGPA].sort((a, b) => (a.gpa || 0) - (b.gpa || 0));
     sorted.forEach((item, idx) => {
       item.position = idx + 1;
@@ -278,7 +262,7 @@ export default function MuhtasariWaMatokeoYaDarasaPage() {
   };
 
   // ================================
-  // 🔥 LOAD SUMMARY - PRIMARY
+  // 🔥 LOAD SUMMARY
   // ================================
 
   const loadSummary = async () => {
@@ -301,8 +285,6 @@ export default function MuhtasariWaMatokeoYaDarasaPage() {
         url += `&region=${encodeURIComponent(region)}`;
       }
       
-      console.log("📤 Fetching primary summary:", url);
-      
       const response = await fetch(url, {
         headers: { 
           Authorization: `Bearer ${token}`,
@@ -312,15 +294,12 @@ export default function MuhtasariWaMatokeoYaDarasaPage() {
       
       if (response.ok) {
         const data = await response.json();
-        console.log("📊 Primary summary data:", data);
         
-        // 🔥 CALCULATE SUBJECT POSITIONS
         let subjectGradeSummary = data.subject_grade_summary || [];
         if (subjectGradeSummary.length > 0) {
           subjectGradeSummary = calculateSubjectPositions(subjectGradeSummary);
         }
         
-        // 🔥 TRANSFORM DATA - PRIMARY FORMAT
         const transformedData: SummaryData = {
           school_name: data.school_name || "SHULE YA MSINGI",
           region: data.region || "_________________________",
@@ -349,7 +328,6 @@ export default function MuhtasariWaMatokeoYaDarasaPage() {
         
         setSummaryData(transformedData);
         setSuccess(`✅ Matokeo ya ${data.results?.length || 0} wanafunzi yamepakiwa!`);
-        console.log("📊 Primary summary loaded:", transformedData);
       } else {
         const errorData = await response.json();
         setError(errorData.detail || `Imeshindwa kupakia data: ${response.status}`);
@@ -363,7 +341,7 @@ export default function MuhtasariWaMatokeoYaDarasaPage() {
   };
 
   // ================================
-  // 🔥 DOWNLOAD EXCEL - PRIMARY
+  // 🔥 DOWNLOAD EXCEL
   // ================================
 
   const downloadExcel = async () => {
@@ -383,8 +361,6 @@ export default function MuhtasariWaMatokeoYaDarasaPage() {
       if (region && region.trim() !== "") {
         url += `&region=${encodeURIComponent(region)}`;
       }
-      
-      console.log("📤 Downloading Excel:", url);
       
       const response = await fetch(url, {
         headers: { 
@@ -436,7 +412,6 @@ export default function MuhtasariWaMatokeoYaDarasaPage() {
   };
 
   const getClassDisplayName = (className: string) => {
-    // 🔥 PRIMARY - DARASA LA 1 HADI 7
     const primaryMap: { [key: string]: string } = {
       "Std 1": "Darasa la I",
       "Std1": "Darasa la I",
@@ -471,6 +446,12 @@ export default function MuhtasariWaMatokeoYaDarasaPage() {
     if (selectedClass && selectedExamType) {
       await loadSummary();
     }
+  };
+
+  // 🔥 FIXED: Helper function to safely get total from division data
+  const getDivisionTotal = (data: { M: number; F: number } | undefined): number => {
+    if (!data) return 0;
+    return (data.M || 0) + (data.F || 0);
   };
 
   // ================================
@@ -659,7 +640,7 @@ export default function MuhtasariWaMatokeoYaDarasaPage() {
                 <h3 className="text-lg font-bold text-gray-800">{summaryData.school_name}</h3>
               </div>
 
-              {/* Grade Summary - PRIMARY A-E */}
+              {/* 🔥 Grade Summary - FIXED! */}
               <Card className="shadow-md overflow-hidden">
                 <CardHeader className="bg-gradient-to-r from-sky-50 to-blue-50 py-3">
                   <CardTitle className="flex items-center gap-2 text-base">
@@ -670,8 +651,8 @@ export default function MuhtasariWaMatokeoYaDarasaPage() {
                 <CardContent className="p-3">
                   <div className="grid grid-cols-5 gap-2 text-center">
                     {["A", "B", "C", "D", "E"].map((grade) => {
-                      const data = summaryData.division_summary?.[grade as keyof typeof summaryData.division_summary];
-                      const total = data ? data.M + data.F : 0;
+                      const data = summaryData.division_summary?.[grade as keyof DivisionSummary] as { M: number; F: number } | undefined;
+                      const total = getDivisionTotal(data);
                       return (
                         <div key={grade} className="bg-gray-50 rounded-lg p-2 border">
                           <div className="text-2xl font-bold text-gray-800">
@@ -773,7 +754,7 @@ export default function MuhtasariWaMatokeoYaDarasaPage() {
                 </CardContent>
               </Card>
 
-              {/* 🔥 SUBJECT GRADE SUMMARY - PRIMARY (NA NAFASI YA SOMO!) */}
+              {/* Subject Grade Summary */}
               {summaryData.subject_grade_summary && summaryData.subject_grade_summary.length > 0 && (
                 <Card className="shadow-md overflow-hidden">
                   <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
@@ -813,7 +794,6 @@ export default function MuhtasariWaMatokeoYaDarasaPage() {
                             </tr>
                           );
                         })}
-                        {/* 🔥 ROW YA NAFASI (POSITION) */}
                         <tr className="bg-gray-100 font-bold">
                           <td colSpan={2} className="border p-2 text-center">NAFASI</td>
                           {summaryData.subject_grade_summary.map((subj) => (
