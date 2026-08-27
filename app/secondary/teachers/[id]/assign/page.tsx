@@ -1,0 +1,576 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useRouter, useParams } from "next/navigation"
+import { MainLayout } from "@/components/layout/MainLayout"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { 
+  Loader2, 
+  Save, 
+  ArrowLeft, 
+  BookOpen,
+  Sparkles,
+  AlertCircle,
+  CheckCircle,
+  GraduationCap,
+  Users,
+  Layers,
+  UserPlus,
+  XCircle,
+  Info
+} from "lucide-react"
+
+interface Subject {
+  id: number
+  name: string
+  code: string | null
+}
+
+interface Class {
+  id: number
+  name: string
+}
+
+interface Stream {
+  id: number
+  name: string
+  class_id: number
+}
+
+interface Assignment {
+  id: number
+  teacher_id: number
+  teacher_name: string
+  subject_id: number
+  subject_name: string
+  class_id: number
+  class_name: string
+  stream_id: number
+  stream_name: string
+}
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+
+export default function AssignTeacherPage() {
+  const router = useRouter()
+  const params = useParams()
+  const teacherId = params?.id as string
+  
+  const [token, setToken] = useState("")
+  const [teacher, setTeacher] = useState<any>(null)
+  const [subjects, setSubjects] = useState<Subject[]>([])
+  const [classes, setClasses] = useState<Class[]>([])
+  const [streams, setStreams] = useState<Stream[]>([])
+  const [filteredStreams, setFilteredStreams] = useState<Stream[]>([])
+  const [existingAssignments, setExistingAssignments] = useState<Assignment[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
+  const [info, setInfo] = useState("")
+  
+  const [formData, setFormData] = useState({
+    subject_id: "",
+    class_id: "",
+    stream_id: "",
+  })
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token")
+    if (!storedToken) {
+      router.push("/login")
+      return
+    }
+    setToken(storedToken)
+    fetchData(storedToken)
+  }, [teacherId])
+
+  const fetchData = async (authToken: string) => {
+    try {
+      await Promise.all([
+        fetchTeacher(authToken),
+        fetchSubjects(authToken),
+        fetchClasses(authToken),
+        fetchStreams(authToken),
+        fetchExistingAssignments(authToken)
+      ])
+    } catch (err) {
+      console.error("Error fetching data:", err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchTeacher = async (authToken: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/teachers/${teacherId}`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      })
+      if (!response.ok) throw new Error("Failed to fetch teacher")
+      const data = await response.json()
+      setTeacher(data)
+    } catch (err) {
+      setError("Failed to load teacher")
+    }
+  }
+
+  const fetchSubjects = async (authToken: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/subjects`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      })
+      if (!response.ok) throw new Error("Failed to fetch subjects")
+      const data = await response.json()
+      setSubjects(data)
+    } catch (err) {
+      console.error("Error fetching subjects:", err)
+    }
+  }
+
+  const fetchClasses = async (authToken: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/classes`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      })
+      if (!response.ok) throw new Error("Failed to fetch classes")
+      const data = await response.json()
+      setClasses(data)
+    } catch (err) {
+      console.error("Error fetching classes:", err)
+    }
+  }
+
+  const fetchStreams = async (authToken: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/streams`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      })
+      if (!response.ok) throw new Error("Failed to fetch streams")
+      const data = await response.json()
+      setStreams(data)
+    } catch (err) {
+      console.error("Error fetching streams:", err)
+    }
+  }
+
+  const fetchExistingAssignments = async (authToken: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/teachers/${teacherId}/assignments`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      })
+      if (!response.ok) throw new Error("Failed to fetch assignments")
+      const data = await response.json()
+      setExistingAssignments(data)
+    } catch (err) {
+      console.error("Error fetching assignments:", err)
+    }
+  }
+
+  // Filter streams when class changes
+  useEffect(() => {
+    if (formData.class_id) {
+      const filtered = streams.filter(
+        (stream) => stream.class_id === parseInt(formData.class_id)
+      )
+      setFilteredStreams(filtered)
+      setFormData((prev) => ({ ...prev, stream_id: "" }))
+      // Clear messages when selection changes
+      setError("")
+      setSuccess("")
+      setInfo("")
+    } else {
+      setFilteredStreams([])
+    }
+  }, [formData.class_id, streams])
+
+  // 🔥 CHECK IF SUBJECT IS ALREADY ASSIGNED
+  const checkIfAlreadyAssigned = () => {
+    if (!formData.subject_id || !formData.class_id || !formData.stream_id) {
+      return false
+    }
+
+    const existing = existingAssignments.find(
+      (a) => 
+        a.subject_id === parseInt(formData.subject_id) &&
+        a.class_id === parseInt(formData.class_id) &&
+        a.stream_id === parseInt(formData.stream_id)
+    )
+
+    if (existing) {
+      setError(`❌ Subject "${existing.subject_name}" is already assigned to ${existing.teacher_name} in class "${existing.class_name}" and stream "${existing.stream_name}"`)
+      return true
+    }
+    return false
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    // 🔥 CHECK IF ALL FIELDS ARE SELECTED
+    if (!formData.subject_id || !formData.class_id || !formData.stream_id) {
+      setError("Please select subject, class, and stream")
+      return
+    }
+
+    // 🔥 CHECK IF ALREADY ASSIGNED
+    if (checkIfAlreadyAssigned()) {
+      return
+    }
+    
+    setSaving(true)
+    setError("")
+    setSuccess("")
+    setInfo("")
+    
+    try {
+      const payload = {
+        subject_id: parseInt(formData.subject_id),
+        class_id: parseInt(formData.class_id),
+        stream_id: parseInt(formData.stream_id),
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/v1/teachers/${teacherId}/assign`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      })
+      
+      const responseData = await response.json()
+      
+      if (!response.ok) {
+        // 🔥 HANDLE DUPLICATE ERROR FROM BACKEND
+        if (responseData.detail && responseData.detail.includes("already assigned")) {
+          setError(`❌ ${responseData.detail}`)
+        } else {
+          throw new Error(responseData.detail || "Failed to assign")
+        }
+        return
+      }
+      
+      // 🔥 SUCCESS MESSAGE WITH DETAILS
+      const subjectName = subjects.find(s => s.id === parseInt(formData.subject_id))?.name || "Subject"
+      const className = classes.find(c => c.id === parseInt(formData.class_id))?.name || "Class"
+      const streamName = streams.find(s => s.id === parseInt(formData.stream_id))?.name || "Stream"
+      
+      setSuccess(`✅ Success! ${teacher?.name} has been assigned to teach "${subjectName}" in class "${className}" and stream "${streamName}"`)
+      
+      // 🔥 REFRESH ASSIGNMENTS
+      await fetchExistingAssignments(token)
+      
+      // 🔥 CLEAR FORM
+      setFormData({
+        subject_id: "",
+        class_id: "",
+        stream_id: "",
+      })
+      
+      // 🔥 AUTO REDIRECT AFTER 3 SECONDS
+      setTimeout(() => {
+        router.push("/teachers")
+      }, 3000)
+      
+    } catch (err: any) {
+      setError(err.message || "Failed to assign teacher")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case "Headmaster": return "👨‍💼"
+      case "Headmistress": return "👩‍💼"
+      case "Academic": return "🎓"
+      case "Teacher": return "👨‍🏫"
+      default: return "👨‍🏫"
+    }
+  }
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="flex flex-col items-center justify-center h-96">
+          <div className="relative">
+            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 blur-xl opacity-50 animate-pulse" />
+            <Loader2 className="h-12 w-12 animate-spin text-blue-600 relative z-10" />
+          </div>
+          <p className="text-gray-500 mt-4 animate-pulse">Loading assignment form...</p>
+        </div>
+      </MainLayout>
+    )
+  }
+
+  return (
+    <MainLayout>
+      <div className="space-y-6 p-6 animate-fadeIn">
+        {/* Header */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-700 p-8 text-white shadow-xl">
+          <div className="absolute top-0 right-0 -mt-20 -mr-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute bottom-0 left-0 -mb-20 -ml-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-4">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => router.push("/teachers")}
+                className="text-white hover:bg-white/20 rounded-xl"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="h-8 w-px bg-white/30" />
+              <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+                <UserPlus className="h-6 w-6" />
+              </div>
+              <div className="h-8 w-px bg-white/30" />
+              <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+                <BookOpen className="h-6 w-6" />
+              </div>
+            </div>
+            <h1 className="text-3xl font-bold mb-2">Assign Teacher</h1>
+            <p className="text-blue-100 flex items-center gap-2">
+              <span className="text-lg">{getRoleIcon(teacher?.role)}</span>
+              Assign {teacher?.name} to teach a subject in a specific class and stream
+            </p>
+          </div>
+        </div>
+
+        {/* 🔥 SUCCESS MESSAGE */}
+        {success && (
+          <div className="bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 px-4 py-4 rounded-lg flex items-start gap-3 animate-slideIn shadow-md">
+            <CheckCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-medium">{success}</p>
+              <p className="text-sm text-emerald-600 mt-1">You will be redirected to teacher list in 3 seconds...</p>
+            </div>
+          </div>
+        )}
+
+        {/* 🔥 ERROR MESSAGE */}
+        {error && (
+          <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-4 rounded-lg flex items-start gap-3 animate-slideIn shadow-md">
+            <XCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-medium">{error}</p>
+              {error.includes("already assigned") && (
+                <p className="text-sm text-red-600 mt-1">
+                  💡 Please choose a different subject, class, stream or remove the existing assignment first.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 🔥 INFO MESSAGE */}
+        {info && (
+          <div className="bg-blue-50 border-l-4 border-blue-500 text-blue-700 px-4 py-3 rounded-lg flex items-center gap-2 animate-slideIn shadow-md">
+            <Info className="h-5 w-5" />
+            <span>{info}</span>
+          </div>
+        )}
+
+        {/* Existing Assignments Summary */}
+        {existingAssignments.length > 0 && (
+          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+            <p className="text-sm text-purple-700 flex items-center gap-2">
+              <BookOpen className="h-4 w-4" />
+              <span className="font-medium">{teacher?.name} already has {existingAssignments.length} assignment(s)</span>
+            </p>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {existingAssignments.map((a) => (
+                <span key={a.id} className="inline-flex items-center px-2.5 py-1 rounded-full text-xs bg-purple-100 text-purple-700 border border-purple-200">
+                  {a.subject_name} - {a.class_name} {a.stream_name ? `(${a.stream_name})` : ''}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Assignment Form Card */}
+        <Card className="shadow-xl border-0 overflow-hidden rounded-2xl">
+          <div className="h-1 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
+          <CardHeader className="bg-white/50 backdrop-blur-sm border-b border-gray-100">
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-blue-600" />
+              Assignment Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Teacher Info */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xl font-bold">
+                    {teacher?.name?.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Selected Teacher</p>
+                    <p className="font-semibold text-gray-800 text-lg">{teacher?.name}</p>
+                    <p className="text-xs text-gray-400">ID: {teacher?.id}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Subject */}
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-blue-600" />
+                  Subject <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={formData.subject_id}
+                  onValueChange={(value) => {
+                    setFormData({ ...formData, subject_id: value })
+                    setError("")
+                    setSuccess("")
+                  }}
+                >
+                  <SelectTrigger className="bg-white border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500">
+                    <SelectValue placeholder="Select subject" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    {subjects.length === 0 ? (
+                      <SelectItem value="none" disabled>No subjects available</SelectItem>
+                    ) : (
+                      subjects.map((subject) => (
+                        <SelectItem key={subject.id} value={subject.id.toString()}>
+                          {subject.name} {subject.code ? `(${subject.code})` : ""}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Class */}
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <GraduationCap className="h-4 w-4 text-indigo-600" />
+                  Class <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={formData.class_id}
+                  onValueChange={(value) => {
+                    setFormData({ ...formData, class_id: value })
+                    setError("")
+                    setSuccess("")
+                  }}
+                >
+                  <SelectTrigger className="bg-white border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500">
+                    <SelectValue placeholder="Select class" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    {classes.length === 0 ? (
+                      <SelectItem value="none" disabled>No classes available</SelectItem>
+                    ) : (
+                      classes.map((cls) => (
+                        <SelectItem key={cls.id} value={cls.id.toString()}>
+                          {cls.name}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Stream */}
+              {formData.class_id && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <Layers className="h-4 w-4 text-purple-600" />
+                    Stream <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={formData.stream_id}
+                    onValueChange={(value) => {
+                      setFormData({ ...formData, stream_id: value })
+                      setError("")
+                      setSuccess("")
+                    }}
+                  >
+                    <SelectTrigger className="bg-white border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500">
+                      <SelectValue placeholder="Select stream" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white">
+                      {filteredStreams.length === 0 ? (
+                        <SelectItem value="none" disabled>No streams available for this class</SelectItem>
+                      ) : (
+                        filteredStreams.map((stream) => (
+                          <SelectItem key={stream.id} value={stream.id.toString()}>
+                            Stream {stream.name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-4 pt-4 border-t">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => router.push("/teachers")}
+                  className="border-gray-300 rounded-xl"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={saving || !formData.subject_id || !formData.class_id || !formData.stream_id}
+                  className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg hover:shadow-xl transition-all rounded-xl"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Assigning...
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Assign Teacher
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Custom Animations */}
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideIn {
+          from { opacity: 0; transform: translateX(-20px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .animate-fadeIn {
+          animation: fadeIn 0.5s ease-out forwards;
+        }
+        
+        .animate-slideIn {
+          animation: slideIn 0.3s ease-out;
+        }
+      `}</style>
+    </MainLayout>
+  )
+}

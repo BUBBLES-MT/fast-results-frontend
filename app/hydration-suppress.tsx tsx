@@ -1,0 +1,22 @@
+"use client";
+
+import { useEffect } from "react";
+
+export function HydrationSuppress() {
+  useEffect(() => {
+    // Suppress the hydration warning in console
+    const originalError = console.error;
+    console.error = (...args) => {
+      if (args[0]?.includes?.("Hydration") || args[0]?.includes?.("hydration")) {
+        return;
+      }
+      originalError.apply(console, args);
+    };
+    
+    return () => {
+      console.error = originalError;
+    };
+  }, []);
+  
+  return null;
+}

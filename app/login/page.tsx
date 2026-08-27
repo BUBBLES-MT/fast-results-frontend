@@ -1,0 +1,1172 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { 
+  School, 
+  UserPlus, 
+  LogIn, 
+  Loader2, 
+  ArrowRight,
+  Mail,
+  Send,
+  Eye,
+  EyeOff,
+  Sparkles,
+  CheckCircle,
+  AlertCircle,
+  Shield,
+  Crown,
+  Search,
+  Filter,
+  X,
+  CreditCard,
+  Calendar,
+  Zap,
+  UsersRound,
+  GraduationCap,
+  Award,
+  Clock,
+  TrendingUp,
+  Star,
+  Rocket,
+} from "lucide-react";
+
+// ============================================================
+// 🔥 CONSTANTS
+// ============================================================
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const SESSION_TIMEOUT_MINUTES = 15;
+
+// ============================================================
+// 🔥 INTERFACES
+// ============================================================
+interface School {
+  id: number;
+  name: string;
+  school_type: string;
+  school_level?: string;
+}
+
+// ============================================================
+// 🔥 ROLES ZINAZOITWA "ADMIN"
+// ============================================================
+const ADMIN_ROLES = [
+  "Mwalimu Mkuu",
+  "Headmaster",
+  "Headmistress",
+  "Second Master",
+  "Second Mistress"
+];
+
+// ============================================================
+// 🔥 ROLES
+// ============================================================
+const AVAILABLE_ROLES = [
+  { value: "Teacher", label: "👨‍🏫 Teacher", description: "Manage your students and marks", school_level: "secondary" },
+  { value: "Academic", label: "🎓 Academic", description: "Manage students, teachers, exams", school_level: "secondary" },
+  { value: "Headmaster", label: "👨‍💼 Headmaster", description: "Full school management", school_level: "secondary" },
+  { value: "Headmistress", label: "👩‍💼 Headmistress", description: "Full school management", school_level: "secondary" },
+  { value: "Second Master", label: "📚 Second Master", description: "Deputy headmaster", school_level: "secondary" },
+  { value: "Second Mistress", label: "📚 Second Mistress", description: "Deputy headmistress", school_level: "secondary" },
+  { value: "Mwalimu", label: "👨‍🏫 Mwalimu", description: "Kusimamia wanafunzi na alama", school_level: "primary" },
+  { value: "Mtaaluma", label: "📚 Mtaaluma", description: "Kusimamia wanafunzi, walimu na mitihani", school_level: "primary" },
+  { value: "Mwalimu Mkuu", label: "👨‍💼 Mwalimu Mkuu", description: "Usimamizi kamili wa shule", school_level: "primary" },
+  { value: "Mwalimu Mkuu Msaidizi", label: "👩‍💼 Mwalimu Mkuu Msaidizi", description: "Kusaidia Mwalimu Mkuu", school_level: "primary" },
+];
+
+const ROLE_MAPPING: Record<string, string> = {
+  "Academic": "Mtaaluma",
+  "Headmaster": "Mwalimu Mkuu",
+  "Headmistress": "Mwalimu Mkuu",
+  "Second Master": "Mwalimu Mkuu Msaidizi",
+  "Second Mistress": "Mwalimu Mkuu Msaidizi",
+  "Teacher": "Mwalimu",
+};
+
+const schoolLevelOptions = [
+  { value: "all", label: "🏫 Shule Zote" },
+  { value: "primary", label: "🏫 Shule za Msingi" },
+  { value: "secondary", label: "📚 Shule za Sekondari" },
+  { value: "advanced", label: "🎓 Kiwango cha Juu" },
+];
+
+// ============================================================
+// 🔥 COOKIE MANAGEMENT
+// ============================================================
+const setCookie = (name: string, value: string, days: number = 7) => {
+  const expires = new Date();
+  expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+  document.cookie = `${name}=${value}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
+};
+
+const deleteCookie = (name: string) => {
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax`;
+};
+
+// ============================================================
+// 🔥 MAIN COMPONENT
+// ============================================================
+export default function LoginPage() {
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState("login");
+  
+  // Login state
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState("");
+  const [loginSuccess, setLoginSuccess] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
+  
+  // ✅ SUBSCRIPTION EXPIRED
+  const [showExpiredDialog, setShowExpiredDialog] = useState(false);
+  const [expiredSchool, setExpiredSchool] = useState<{id: number, name: string, expiry_date: string} | null>(null);
+  const [redirectCountdown, setRedirectCountdown] = useState(5);
+  
+  // Forgot Password
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSuccess, setForgotSuccess] = useState("");
+  const [forgotError, setForgotError] = useState("");
+  
+  // Register state
+  const [schools, setSchools] = useState<School[]>([]);
+  const [filteredSchools, setFilteredSchools] = useState<School[]>([]);
+  const [selectedSchoolLevel, setSelectedSchoolLevel] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [registerData, setRegisterData] = useState({
+    name: "",
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    school_id: "",
+    role: "Teacher",
+    phone1: "",
+  });
+  const [registerError, setRegisterError] = useState("");
+  const [registerSuccess, setRegisterSuccess] = useState("");
+  const [registerLoading, setRegisterLoading] = useState(false);
+  
+  const filteredRoles = AVAILABLE_ROLES.filter(role => 
+    !selectedSchoolLevel || role.school_level === selectedSchoolLevel
+  );
+
+  // ============================================================
+  // 🔥 USE EFFECT
+  // ============================================================
+  useEffect(() => {
+    const clearAuthData = () => {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user_type");
+      localStorage.removeItem("user_name");
+      localStorage.removeItem("user_id");
+      localStorage.removeItem("teacher_id");
+      localStorage.removeItem("school_level");
+      localStorage.removeItem("school_id");
+      localStorage.removeItem("last_activity");
+      deleteCookie("token");
+      deleteCookie("user_type");
+      deleteCookie("user_name");
+    };
+    
+    clearAuthData();
+    
+    const savedUsername = localStorage.getItem("remembered_username");
+    const savedPassword = localStorage.getItem("remembered_password");
+    const savedRemember = localStorage.getItem("remember_me");
+    
+    if (savedRemember === "true" && savedUsername) {
+      setUsername(savedUsername);
+      if (savedPassword) setPassword(savedPassword);
+      setRememberMe(true);
+    }
+    
+    const fetchSchools = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/v1/schools`);
+        setSchools(response.data);
+        setFilteredSchools(response.data);
+        console.log("🏫 Schools loaded:", response.data.length);
+      } catch (err) {
+        console.error("Error fetching schools:", err);
+      }
+    };
+    fetchSchools();
+  }, []);
+
+  // 🔥 FILTER SCHOOLS
+  useEffect(() => {
+    let filtered = [...schools];
+    
+    if (selectedSchoolLevel && selectedSchoolLevel !== "all") {
+      filtered = filtered.filter(school => 
+        school.school_level === selectedSchoolLevel || 
+        school.school_type === selectedSchoolLevel
+      );
+    }
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(school => 
+        school.name.toLowerCase().includes(query)
+      );
+    }
+    
+    setFilteredSchools(filtered);
+  }, [selectedSchoolLevel, searchQuery, schools]);
+
+  // 🔥 COUNTDOWN FOR REDIRECT TO PAYMENT
+  useEffect(() => {
+    if (showExpiredDialog && redirectCountdown > 0) {
+      const timer = setTimeout(() => {
+        setRedirectCountdown(prev => prev - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (showExpiredDialog && redirectCountdown === 0) {
+      // 🔥 REDIRECT TO PAYMENT PAGE!
+      if (expiredSchool && expiredSchool.id) {
+        console.log("🚀 Auto-redirecting to payment for school:", expiredSchool.id);
+        router.push(`/payment?school_id=${expiredSchool.id}`);
+      } else {
+        console.error("❌ No school_id for auto-redirect!");
+        setLoginError("⚠️ Unable to renew. Please contact support.");
+        setShowExpiredDialog(false);
+      }
+    }
+  }, [showExpiredDialog, redirectCountdown, expiredSchool, router]);
+
+  const clearSearch = () => {
+    setSearchQuery("");
+  };
+
+  const handleSchoolChange = (schoolId: string) => {
+    setRegisterData({ ...registerData, school_id: schoolId });
+    const selectedSchool = schools.find(s => s.id.toString() === schoolId);
+    if (selectedSchool) {
+      setSelectedSchoolLevel(selectedSchool.school_level || selectedSchool.school_type || "secondary");
+    }
+  };
+
+  const mapRoleToSchoolLevel = (role: string, schoolLevel: string): string => {
+    if (schoolLevel === "primary" && ROLE_MAPPING[role]) {
+      return ROLE_MAPPING[role];
+    }
+    return role;
+  };
+
+  // ============================================================
+  // 🔥 LOGIN
+  // ============================================================
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginLoading(true);
+    setLoginError("");
+    setLoginSuccess("");
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      // ✅ CHECK IF SUBSCRIPTION EXPIRED (402 Payment Required)
+      if (response.status === 402) {
+        const detail = data.detail;
+        
+        const schoolId = detail.school_id || detail.schoolId;
+        const schoolName = detail.school_name || detail.schoolName || "Shule yako";
+        const expiryDate = detail.expiry_date || detail.expiryDate || "tarehe haijulikani";
+        
+        console.log("🔴 Subscription Expired Response:", { schoolId, schoolName, expiryDate });
+        
+        if (!schoolId) {
+          console.error("❌ No school_id in 402 response!");
+          setLoginError("⚠️ Unable to identify school. Please contact support.");
+          setLoginLoading(false);
+          return;
+        }
+        
+        setExpiredSchool({
+          id: schoolId,
+          name: schoolName,
+          expiry_date: expiryDate
+        });
+        setShowExpiredDialog(true);
+        setRedirectCountdown(5);
+        setLoginError("");
+        setLoginLoading(false);
+        return;
+      }
+
+      if (!response.ok) {
+        let errorMessage = "Login failed";
+        if (typeof data.detail === "string") errorMessage = data.detail;
+        else if (data.detail?.message) errorMessage = data.detail.message;
+        else if (data.message) errorMessage = data.message;
+        throw new Error(errorMessage);
+      }
+
+      const { access_token, user_type, name, user_id, role, school_level, school_id } = data;
+
+      localStorage.clear();
+      deleteCookie("token");
+      deleteCookie("user_type");
+      deleteCookie("user_name");
+      
+      const finalSchoolLevel = school_level || "secondary";
+      let finalUserType = user_type;
+      
+      if (finalSchoolLevel === "primary") {
+        finalUserType = mapRoleToSchoolLevel(user_type, finalSchoolLevel);
+      }
+      
+      localStorage.setItem("token", access_token);
+      localStorage.setItem("user_type", finalUserType);
+      localStorage.setItem("user_name", name);
+      localStorage.setItem("school_level", finalSchoolLevel);
+      localStorage.setItem("last_activity", Date.now().toString());
+      
+      if (school_id) {
+        localStorage.setItem("school_id", school_id.toString());
+      } else {
+        const fetchedSchoolId = await fetchUserSchool(access_token);
+        if (fetchedSchoolId) {
+          localStorage.setItem("school_id", fetchedSchoolId.toString());
+        }
+      }
+      
+      if (user_id) {
+        localStorage.setItem("user_id", user_id.toString());
+        if (finalUserType === "Mwalimu" || finalUserType === "Teacher") {
+          localStorage.setItem("teacher_id", user_id.toString());
+        }
+      }
+      
+      setCookie("token", access_token, 7);
+      setCookie("user_type", finalUserType, 7);
+      setCookie("user_name", encodeURIComponent(name), 7);
+      setCookie("school_level", finalSchoolLevel, 7);
+      if (school_id) {
+        setCookie("school_id", school_id.toString(), 7);
+      }
+      
+      if (rememberMe) {
+        localStorage.setItem("remembered_username", username);
+        localStorage.setItem("remembered_password", password);
+        localStorage.setItem("remember_me", "true");
+      } else {
+        localStorage.removeItem("remembered_username");
+        localStorage.removeItem("remembered_password");
+        localStorage.setItem("remember_me", "false");
+      }
+
+      const isSuperadmin = user_type === "superadmin" || user_type === "Superadmin";
+      
+      if (isSuperadmin) {
+        setLoginSuccess("Welcome Superadmin! Redirecting...");
+        setTimeout(() => window.location.href = "/superadmin", 500);
+      } else {
+        let targetUrl = "/secondary/dashboard";
+        if (finalSchoolLevel === "primary") targetUrl = "/primary/dashboard";
+        else if (finalSchoolLevel === "advanced") targetUrl = "/advanced/dashboard";
+        
+        setLoginSuccess(`Welcome ${name}! Redirecting...`);
+        setTimeout(() => window.location.href = targetUrl, 500);
+      }
+      
+    } catch (err: any) {
+      setLoginError(err.message || "Login failed. Please check your credentials.");
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const fetchUserSchool = async (token: string): Promise<number | null> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (data.school_id) return data.school_id;
+    } catch (err) {
+      console.error("Error fetching user school:", err);
+    }
+    return null;
+  };
+
+  // ============================================================
+  // 🔥 GO TO PAYMENT PAGE
+  // ============================================================
+  const goToPayment = () => {
+    console.log("🔍 goToPayment called");
+    console.log("🔍 expiredSchool:", expiredSchool);
+    
+    if (expiredSchool && expiredSchool.id) {
+      console.log("🚀 Redirecting to payment for school:", expiredSchool.id);
+      setShowExpiredDialog(false);
+      router.push(`/payment?school_id=${expiredSchool.id}`);
+    } else {
+      console.error("❌ No school_id in expiredSchool:", expiredSchool);
+      setLoginError("⚠️ Unable to renew. Please contact support.");
+      setShowExpiredDialog(false);
+    }
+  };
+
+  // ============================================================
+  // 🔥 FORGOT PASSWORD
+  // ============================================================
+  const handleForgotPassword = async () => {
+    if (!forgotEmail) {
+      setForgotError("Please enter your email address");
+      return;
+    }
+    
+    setForgotLoading(true);
+    setForgotError("");
+    setForgotSuccess("");
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.detail || "Failed to send reset link");
+      }
+      
+      setForgotSuccess("Password reset link sent to your email!");
+      setTimeout(() => {
+        setForgotPasswordOpen(false);
+        setForgotEmail("");
+        setForgotSuccess("");
+      }, 3000);
+    } catch (err: any) {
+      setForgotError(err.message || "Failed to send reset link. Please try again.");
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  // ============================================================
+  // 🔥 REGISTER
+  // ============================================================
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRegisterLoading(true);
+    setRegisterError("");
+    setRegisterSuccess("");
+
+    if (registerData.password !== registerData.confirmPassword) {
+      setRegisterError("Passwords do not match");
+      setRegisterLoading(false);
+      return;
+    }
+    if (!registerData.school_id) {
+      setRegisterError("Tafadhali chagua shule yako");
+      setRegisterLoading(false);
+      return;
+    }
+    if (registerData.password.length < 6) {
+      setRegisterError("Nenosiri lazima iwe na herufi 6 au zaidi");
+      setRegisterLoading(false);
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/v1/auth/register`, {
+        name: registerData.name,
+        username: registerData.username,
+        email: registerData.email,
+        password: registerData.password,
+        phone1: registerData.phone1,
+        role: registerData.role,
+        school_id: parseInt(registerData.school_id),
+      });
+
+      if (response.status === 200 || response.status === 201) {
+        const selectedSchool = schools.find(s => s.id === parseInt(registerData.school_id));
+        const schoolLevel = selectedSchool?.school_level || "secondary";
+        const schoolName = selectedSchool?.name || "shule yako";
+        
+        const isAdmin = ADMIN_ROLES.includes(registerData.role);
+        
+        let successMessage = "";
+        let loginMessage = "";
+        
+        if (isAdmin) {
+          if (registerData.role === "Mwalimu Mkuu") {
+            successMessage = `🎉 Hongera! Usajili wako umekamilika.\n\nSasa wewe ni Mwalimu Mkuu wa shule ya "${schoolName}".\n\nTayari unaweza kuingia na kuanza kusimamia shule yako!`;
+            loginMessage = `🎉 Karibu Mwalimu Mkuu wa ${schoolName}!`;
+          } else if (registerData.role === "Headmaster") {
+            successMessage = `🎉 Congratulations! Your registration is complete.\n\nYou are now the Headmaster of "${schoolName}".\n\nYou can now login and start managing your school!`;
+            loginMessage = `🎉 Welcome Headmaster of ${schoolName}!`;
+          } else if (registerData.role === "Headmistress") {
+            successMessage = `🎉 Congratulations! Your registration is complete.\n\nYou are now the Headmistress of "${schoolName}".\n\nYou can now login and start managing your school!`;
+            loginMessage = `🎉 Welcome Headmistress of ${schoolName}!`;
+          } else if (registerData.role === "Second Master") {
+            successMessage = `🎉 Congratulations! Your registration is complete.\n\nYou are now the Second Master of "${schoolName}".\n\nYou can now login and start managing your school!`;
+            loginMessage = `🎉 Welcome Second Master of ${schoolName}!`;
+          } else if (registerData.role === "Second Mistress") {
+            successMessage = `🎉 Congratulations! Your registration is complete.\n\nYou are now the Second Mistress of "${schoolName}".\n\nYou can now login and start managing your school!`;
+            loginMessage = `🎉 Welcome Second Mistress of ${schoolName}!`;
+          } else {
+            successMessage = `🎉 Registration complete! Welcome to ${schoolName}!`;
+            loginMessage = `🎉 Welcome to ${schoolName}!`;
+          }
+        } else {
+          if (schoolLevel === "primary") {
+            successMessage = 
+              `✅ Usajili wako umefanikiwa!\n\n` +
+              `Ombi lako limepelekwa kwa wakuu wa shule ya "${schoolName}" kwa idhini.\n\n` +
+              `Watu wanaoidhinisha:\n` +
+              `👨‍💼 Mwalimu Mkuu\n` +
+              `👩‍💼 Mwalimu Mkuu Msaidizi\n` +
+              `📚 Mtaaluma\n\n` +
+              `Utapata arifa baada ya idhini.\n` +
+              `Asante kwa kujiandikisha!`;
+            loginMessage = 
+              `✅ Usajili wako umefanikiwa!\n` +
+              `Ombi lako linasubiri idhini ya Mwalimu Mkuu, Mwalimu Mkuu Msaidizi, au Mtaaluma.`;
+          } else {
+            successMessage = 
+              `✅ Registration successful!\n\n` +
+              `Your application has been sent to "${schoolName}" school administrators for approval.\n\n` +
+              `Approving authorities:\n` +
+              `👨‍💼 Headmaster/Headmistress\n` +
+              `👩‍💼 Second Master/Second Mistress\n` +
+              `📚 Academic\n\n` +
+              `You will receive a notification after approval.\n` +
+              `Thank you for registering!`;
+            loginMessage = 
+              `✅ Registration successful!\n` +
+              `Your application is pending approval from Headmaster, Second Master, or Academic.`;
+          }
+        }
+        
+        setRegisterSuccess(successMessage);
+        
+        setTimeout(() => {
+          setActiveTab("login");
+          setRegisterSuccess("");
+          setLoginSuccess(loginMessage);
+        }, 4000);
+        
+        setRegisterData({
+          name: "",
+          username: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+          school_id: "",
+          role: "Teacher",
+          phone1: "",
+        });
+        setSelectedSchoolLevel("");
+        setSearchQuery("");
+      }
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.detail || "Usajili umeshindwa. Tafadhali jaribu tena.";
+      setRegisterError(errorMsg);
+    } finally {
+      setRegisterLoading(false);
+    }
+  };
+
+  // ============================================================
+  // 🔥 HELPERS
+  // ============================================================
+  const getSchoolTypeLabel = (type: string) => {
+    switch (type) {
+      case "primary": return "🏫 Msingi";
+      case "secondary": return "📚 Sekondari";
+      case "advanced": return "🎓 Kiwango cha Juu";
+      default: return type;
+    }
+  };
+
+  const getRoleDescription = (roleValue: string) => {
+    const role = AVAILABLE_ROLES.find(r => r.value === roleValue);
+    return role?.description || "";
+  };
+
+  // ============================================================
+  // 🔥 RENDER
+  // ============================================================
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-100 via-blue-100 to-indigo-100 p-6 relative overflow-hidden">
+      {/* Decorative Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-sky-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000" />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-indigo-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000" />
+      </div>
+
+      <Card className="w-full max-w-lg shadow-2xl border-0 bg-white/80 backdrop-blur-xl relative z-10 animate-fadeIn rounded-2xl">
+        <CardHeader className="text-center">
+          <div className="mx-auto bg-gradient-to-r from-sky-500 to-blue-600 p-3 rounded-2xl w-20 h-20 flex items-center justify-center mb-4 shadow-lg shadow-blue-500/30">
+            <School className="h-10 w-10 text-white" />
+          </div>
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-sky-700 to-blue-700 bg-clip-text text-transparent">
+            MASI FAST RESULTS
+          </CardTitle>
+          <CardDescription className="text-gray-600">
+            Fast and Accurate Results
+          </CardDescription>
+        </CardHeader>
+
+        {loginSuccess && (
+          <div className="mx-6 mb-4 bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 px-4 py-4 rounded-lg shadow-md">
+            <div className="flex items-start gap-3">
+              <CheckCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-medium text-base whitespace-pre-line">{loginSuccess}</p>
+                {!loginSuccess.includes("🎉") && !loginSuccess.includes("Karibu") && !loginSuccess.includes("Welcome") && (
+                  <p className="text-xs text-emerald-600 mt-2">⏳ Utapata taarifa baada ya idhini. Asante!</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 bg-sky-100/50 rounded-xl p-1 mx-auto w-[90%]">
+            <TabsTrigger 
+              value="login" 
+              className="gap-2 data-[state=active]:bg-white data-[state=active]:text-sky-700 data-[state=active]:shadow-md rounded-lg transition-all"
+            >
+              <LogIn className="h-4 w-4" />
+              Login
+            </TabsTrigger>
+            <TabsTrigger 
+              value="register" 
+              className="gap-2 data-[state=active]:bg-white data-[state=active]:text-sky-700 data-[state=active]:shadow-md rounded-lg transition-all"
+            >
+              <UserPlus className="h-4 w-4" />
+              Register
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Login Tab */}
+          <TabsContent value="login">
+            <CardContent className="pt-6">
+              <form onSubmit={handleLogin} className="space-y-6">
+                <div className="space-y-2">
+                  <Label className="text-gray-700 font-medium">Username</Label>
+                  <Input
+                    type="text"
+                    placeholder="Enter your username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-gray-700 font-medium">Password</Label>
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 pr-10"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="remember"
+                      checked={rememberMe}
+                      onCheckedChange={(checked) => setRememberMe(checked === true)}
+                      className="border-gray-300 data-[state=checked]:bg-sky-600 data-[state=checked]:border-sky-600"
+                    />
+                    <Label htmlFor="remember" className="text-sm text-gray-600 cursor-pointer">
+                      Remember me
+                    </Label>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setForgotPasswordOpen(true)}
+                    className="text-sm text-sky-600 hover:text-sky-700 hover:underline transition-all"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+
+                {loginError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4" />
+                    {loginError}
+                  </div>
+                )}
+                
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-200" 
+                  disabled={loginLoading}
+                >
+                  {loginLoading ? (
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Logging in...</>
+                  ) : (
+                    <>Login <ArrowRight className="ml-2 h-4 w-4" /></>
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </TabsContent>
+
+          {/* Register Tab */}
+          <TabsContent value="register">
+            <CardContent className="pt-6">
+              <form onSubmit={handleRegister} className="space-y-4">
+                {registerSuccess && (
+                  <div className="bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 px-4 py-4 rounded-lg shadow-md">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="font-medium text-base whitespace-pre-line">{registerSuccess}</p>
+                        {!registerSuccess.includes("🎉") && !registerSuccess.includes("Karibu") && !registerSuccess.includes("Welcome") && (
+                          <p className="text-xs text-emerald-600 mt-2">⏳ Utapata arifa baada ya idhini. Asante!</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="space-y-2">
+                  <Label className="text-gray-700 font-medium">Full Name *</Label>
+                  <Input
+                    placeholder="Enter your full name"
+                    value={registerData.name}
+                    onChange={(e) => setRegisterData({ ...registerData, name: e.target.value })}
+                    className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-gray-700 font-medium">Username *</Label>
+                  <Input
+                    placeholder="Choose a username"
+                    value={registerData.username}
+                    onChange={(e) => setRegisterData({ ...registerData, username: e.target.value })}
+                    className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-gray-700 font-medium">Email *</Label>
+                  <Input
+                    type="email"
+                    placeholder="Enter your email"
+                    value={registerData.email}
+                    onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
+                    className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-gray-700 font-medium flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-sky-600" />
+                    Chagua Aina ya Shule
+                  </Label>
+                  <Select
+                    value={selectedSchoolLevel || "all"}
+                    onValueChange={(value) => setSelectedSchoolLevel(value === "all" ? "" : value)}
+                  >
+                    <SelectTrigger className="bg-white border-gray-200">
+                      <SelectValue placeholder="Chagua aina ya shule" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-gray-200 shadow-lg">
+                      {schoolLevelOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value} className="hover:bg-sky-50">
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500">Chagua aina ya shule ili kuona shule zinazolingana</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-gray-700 font-medium flex items-center gap-2">
+                    <Search className="h-4 w-4 text-sky-600" />
+                    Tafuta Shule Yako
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      placeholder="Andika jina la shule yako..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500 pr-10"
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onClick={clearSearch}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    {filteredSchools.length > 0 
+                      ? `${filteredSchools.length} shule zimepatikana` 
+                      : "Hakuna shule inayolingana na utafutaji wako"}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-gray-700 font-medium">Select Your School *</Label>
+                  <Select
+                    value={registerData.school_id}
+                    onValueChange={handleSchoolChange}
+                  >
+                    <SelectTrigger className="bg-white border-gray-200">
+                      <SelectValue placeholder="Choose your school" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-gray-200 shadow-lg max-h-60 overflow-y-auto">
+                      {filteredSchools.length === 0 ? (
+                        <SelectItem value="none" disabled>
+                          {searchQuery ? "Hakuna shule inayolingana" : "No schools available"}
+                        </SelectItem>
+                      ) : (
+                        filteredSchools.map((school) => (
+                          <SelectItem key={school.id} value={school.id.toString()} className="hover:bg-sky-50">
+                            <div className="flex items-center gap-2">
+                              <span>{school.name}</span>
+                              <span className="text-xs text-gray-400">- {getSchoolTypeLabel(school.school_type)}</span>
+                            </div>
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500">
+                    {filteredSchools.length > 0 
+                      ? `${filteredSchools.length} shule zilizopatikana. Chagua shule yako.`
+                      : "Badilisha aina ya shule au tafuta kwa jina"}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-gray-700 font-medium">Your Role *</Label>
+                  <Select
+                    value={registerData.role}
+                    onValueChange={(value) => setRegisterData({ ...registerData, role: value })}
+                  >
+                    <SelectTrigger className="bg-white border-gray-200">
+                      <SelectValue placeholder="Select your role" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-gray-200 shadow-lg">
+                      {filteredRoles.length === 0 ? (
+                        <SelectItem value="none" disabled>Please select a school first</SelectItem>
+                      ) : (
+                        filteredRoles.map((role) => (
+                          <SelectItem key={role.value} value={role.value} className="hover:bg-sky-50">
+                            {role.label}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-sky-600">{getRoleDescription(registerData.role)}</p>
+                  <p className="text-xs text-amber-600">⚠️ Headmaster and Academic roles require admin approval.</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-gray-700 font-medium">Phone Number</Label>
+                  <Input
+                    placeholder="e.g., 0712345678"
+                    value={registerData.phone1}
+                    onChange={(e) => setRegisterData({ ...registerData, phone1: e.target.value })}
+                    className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-gray-700 font-medium">Password *</Label>
+                    <Input
+                      type="password"
+                      placeholder="Create password (min 6 chars)"
+                      value={registerData.password}
+                      onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
+                      className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-gray-700 font-medium">Confirm Password *</Label>
+                    <Input
+                      type="password"
+                      placeholder="Confirm password"
+                      value={registerData.confirmPassword}
+                      onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
+                      className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {registerError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4" />
+                    {registerError}
+                  </div>
+                )}
+
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-lg hover:shadow-xl transition-all duration-200" 
+                  disabled={registerLoading}
+                >
+                  {registerLoading ? (
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Registering...</>
+                  ) : (
+                    <>Register <ArrowRight className="ml-2 h-4 w-4" /></>
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </TabsContent>
+        </Tabs>
+
+        <CardFooter className="flex flex-col gap-2 justify-center border-t border-gray-200 pt-6">
+          <p className="text-xs text-gray-500 text-center">By registering, you agree to our terms and conditions.</p>
+          <div className="flex items-center gap-2 text-xs text-gray-400 text-center">
+            <Shield className="h-3 w-3" /> Superadmin access is by invitation only.
+            <Crown className="h-3 w-3 text-amber-500" />
+          </div>
+        </CardFooter>
+      </Card>
+
+      {/* ============================================================
+          🔥 SUBSCRIPTION EXPIRED DIALOG - PRO MAX VERSION
+          ============================================================ */}
+      <Dialog open={showExpiredDialog} onOpenChange={setShowExpiredDialog}>
+        <DialogContent className="sm:max-w-md bg-white rounded-2xl border-0 shadow-2xl">
+          <DialogHeader>
+            <div className="mx-auto bg-amber-100 p-3 rounded-full w-16 h-16 flex items-center justify-center animate-pulse">
+              <CreditCard className="h-8 w-8 text-amber-600" />
+            </div>
+            <DialogTitle className="text-xl text-center text-amber-800">
+              ⚠️ Subscription Expired
+            </DialogTitle>
+            <DialogDescription className="text-center text-gray-600">
+              The subscription for <strong className="text-amber-700">{expiredSchool?.name || "Shule yako"}</strong> has expired.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {/* Expired Date */}
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <Calendar className="h-5 w-5 text-amber-600" />
+                <div>
+                  <p className="text-sm text-gray-700">
+                    <strong>Expired on:</strong>{" "}
+                    {expiredSchool?.expiry_date 
+                      ? new Date(expiredSchool.expiry_date).toLocaleDateString()
+                      : "Tarehe haijulikani"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Main Message */}
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-sm text-red-700 font-semibold">🔒 Account Suspended</p>
+              <p className="text-sm text-red-600 mt-1">
+                Your school account has been temporarily suspended due to an expired subscription.
+                To restore full access to all features and services, please renew your subscription
+                immediately.
+              </p>
+            </div>
+
+            {/* What to Do */}
+            <div className="bg-sky-50 border border-sky-200 rounded-lg p-4">
+              <p className="text-sm text-sky-700 font-semibold">📋 What You Need to Do:</p>
+              <ul className="text-sm text-sky-600 mt-2 space-y-2 list-disc list-inside">
+                <li>Contact your school management to process payment</li>
+                <li>Choose a subscription plan that fits your needs</li>
+                <li>Complete the renewal process</li>
+                <li>Contact support if you need assistance</li>
+              </ul>
+            </div>
+
+            {/* Benefits of Renewing */}
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+              <p className="text-sm text-emerald-700 font-semibold">✅ Benefits of Renewing:</p>
+              <ul className="text-sm text-emerald-600 mt-2 space-y-1 list-disc list-inside">
+                <li>Full access to student management system</li>
+                <li>Teacher and staff management</li>
+                <li>Academic records and reports</li>
+                <li>Parent and student communication</li>
+                <li>24/7 technical support</li>
+              </ul>
+            </div>
+
+            {/* Support */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <p className="text-sm text-gray-700 font-semibold">📞 Need Help?</p>
+              <div className="text-sm text-gray-600 mt-2 space-y-1">
+                <p>📧 Email: <strong>support@masifastresults.com</strong></p>
+                <p>📞 Phone: <strong>+255 700 000 000</strong></p>
+                <p>🕐 Hours: Monday - Friday, 8:00 AM - 6:00 PM (EAT)</p>
+              </div>
+            </div>
+
+            {/* Countdown */}
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg p-4 text-center">
+              <p className="text-sm text-amber-700">
+                <strong>⏳ Redirecting to payment page in {redirectCountdown} seconds...</strong>
+              </p>
+              <div className="w-full bg-gray-200 rounded-full h-2 mt-2 overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-1000"
+                  style={{ width: `${((5 - redirectCountdown) / 5) * 100}%` }}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="flex flex-col gap-2 sm:flex-row">
+            <Button 
+              onClick={goToPayment}
+              className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-lg hover:shadow-xl transition-all duration-200"
+            >
+              <CreditCard className="h-4 w-4 mr-2" />
+              Renew Now
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowExpiredDialog(false)}
+              className="w-full sm:w-auto border-gray-300 text-gray-600 hover:bg-gray-50"
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Forgot Password Dialog */}
+      <Dialog open={forgotPasswordOpen} onOpenChange={setForgotPasswordOpen}>
+        <DialogContent className="sm:max-w-md bg-white rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-sky-600" />
+              Reset Password
+            </DialogTitle>
+            <DialogDescription>Enter your email address and we'll send you a link to reset your password.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-gray-700">Email Address</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type="email"
+                  placeholder="Enter your registered email"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  className="pl-10 bg-white border-gray-200 focus:ring-2 focus:ring-sky-500"
+                />
+              </div>
+            </div>
+            {forgotError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-lg flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" /> {forgotError}
+              </div>
+            )}
+            {forgotSuccess && (
+              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-2 rounded-lg flex items-center gap-2">
+                <CheckCircle className="h-4 w-4" /> {forgotSuccess}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setForgotPasswordOpen(false)}>Cancel</Button>
+            <Button onClick={handleForgotPassword} disabled={forgotLoading} className="bg-gradient-to-r from-sky-600 to-blue-600">
+              {forgotLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+              Send Reset Link
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <style jsx global>{`
+        @keyframes blob {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+        .animate-blob { animation: blob 7s infinite; }
+        .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
+        .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        .animation-delay-2000 { animation-delay: 2s; }
+        .animation-delay-4000 { animation-delay: 4s; }
+      `}</style>
+    </div>
+  );
+}
