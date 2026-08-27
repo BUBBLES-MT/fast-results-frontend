@@ -1,10 +1,12 @@
-"use client"
+// app/payment/success/page.tsx
 
-import { useEffect, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+"use client";
+
+import { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   CheckCircle,
   ArrowRight,
@@ -29,117 +31,125 @@ import {
   ShieldCheck,
   LogIn,
   Loader2,
-} from "lucide-react"
+} from "lucide-react";
 
 // ============================================================
-// 🔥 PAYMENT SUCCESS PAGE - ILIYOBORESHA
+// 🔥 🔥 🔥 SUCCESS CONTENT COMPONENT (Wrapped in Suspense)
 // ============================================================
-export default function PaymentSuccessPage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const transactionId = searchParams.get("transaction_id")
-  const plan = searchParams.get("plan") || "Monthly"
-  const amount = searchParams.get("amount") || "0"
-  
-  const [countdown, setCountdown] = useState(5)
-  const [copied, setCopied] = useState(false)
-  const [showDetails, setShowDetails] = useState(false)
-  const [isRedirecting, setIsRedirecting] = useState(false)
+
+function SuccessContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const transactionId = searchParams.get("transaction_id");
+  const plan = searchParams.get("plan") || "Monthly";
+  const amount = searchParams.get("amount") || "0";
+
+  const [countdown, setCountdown] = useState(5);
+  const [copied, setCopied] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   // ✅ Auto-redirect to LOGIN after 5 seconds
   useEffect(() => {
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          clearInterval(timer)
-          return 0
+          clearInterval(timer);
+          return 0;
         }
-        return prev - 1
-      })
-    }, 1000)
+        return prev - 1;
+      });
+    }, 1000);
 
     const redirectTimer = setTimeout(() => {
-      setIsRedirecting(true)
+      setIsRedirecting(true);
       // ✅ Elekeza kwenye LOGIN
-      router.push("/login?payment=success")
-    }, 5000)
+      router.push("/login?payment=success");
+    }, 5000);
 
     return () => {
-      clearInterval(timer)
-      clearTimeout(redirectTimer)
-    }
-  }, [router])
+      clearInterval(timer);
+      clearTimeout(redirectTimer);
+    };
+  }, [router]);
 
   // Format currency
   const formatCurrency = (value: string) => {
-    const num = parseInt(value) || 0
-    return `TSh ${num.toLocaleString()}`
-  }
+    const num = parseInt(value) || 0;
+    return `TSh ${num.toLocaleString()}`;
+  };
 
   // Handle copy
   const handleCopy = () => {
-    navigator.clipboard.writeText(window.location.href)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   // Handle share
   const handleShare = () => {
     if (navigator.share) {
-      navigator.share({
-        title: "Payment Successful!",
-        text: "I just renewed my school subscription! 🎉",
-        url: window.location.href,
-      }).catch(console.error)
+      navigator
+        .share({
+          title: "Payment Successful!",
+          text: "I just renewed my school subscription! 🎉",
+          url: window.location.href,
+        })
+        .catch(console.error);
     } else {
-      handleCopy()
+      handleCopy();
     }
-  }
+  };
 
   // Handle print
   const handlePrint = () => {
-    window.print()
-  }
+    window.print();
+  };
 
   // Handle manual redirect to login
   const handleLoginRedirect = () => {
-    setIsRedirecting(true)
-    router.push("/login?payment=success")
-  }
+    setIsRedirecting(true);
+    router.push("/login?payment=success");
+  };
 
   // Get plan badge
   const getPlanBadge = () => {
     switch (plan?.toLowerCase()) {
       case "monthly":
-        return "bg-blue-100 text-blue-700 border-blue-200"
+        return "bg-blue-100 text-blue-700 border-blue-200";
       case "quarterly":
-        return "bg-purple-100 text-purple-700 border-purple-200"
+        return "bg-purple-100 text-purple-700 border-purple-200";
       case "semester":
-        return "bg-amber-100 text-amber-700 border-amber-200"
+        return "bg-amber-100 text-amber-700 border-amber-200";
       case "annual":
-        return "bg-emerald-100 text-emerald-700 border-emerald-200"
+        return "bg-emerald-100 text-emerald-700 border-emerald-200";
       default:
-        return "bg-sky-100 text-sky-700 border-sky-200"
+        return "bg-sky-100 text-sky-700 border-sky-200";
     }
-  }
+  };
 
   const getPlanEmoji = () => {
     switch (plan?.toLowerCase()) {
-      case "monthly": return "🚀"
-      case "quarterly": return "🔥"
-      case "semester": return "⭐"
-      case "annual": return "👑"
-      default: return "🎉"
+      case "monthly":
+        return "🚀";
+      case "quarterly":
+        return "🔥";
+      case "semester":
+        return "⭐";
+      case "annual":
+        return "👑";
+      default:
+        return "🎉";
     }
-  }
+  };
 
   // Get transaction display
   const getTransactionDisplay = () => {
     if (transactionId && transactionId !== "") {
-      return transactionId
+      return transactionId;
     }
-    return "TXN-" + Date.now().toString().slice(-8)
-  }
+    return "TXN-" + Date.now().toString().slice(-8);
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-100 via-green-100 to-teal-100 p-4">
@@ -202,7 +212,11 @@ export default function PaymentSuccessPage() {
                   {getTransactionDisplay()}
                 </Badge>
               </div>
-              <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform duration-300 ${showDetails ? 'rotate-180' : ''}`} />
+              <ChevronDown
+                className={`h-4 w-4 text-gray-400 transition-transform duration-300 ${
+                  showDetails ? "rotate-180" : ""
+                }`}
+              />
             </button>
 
             {showDetails && (
@@ -276,7 +290,11 @@ export default function PaymentSuccessPage() {
           </div>
 
           {/* ✅ REDIRECT INFO - Login not Dashboard */}
-          <div className={`bg-amber-50 border border-amber-200 rounded-xl p-3 text-center transition-all duration-300 ${isRedirecting ? 'opacity-50' : ''}`}>
+          <div
+            className={`bg-amber-50 border border-amber-200 rounded-xl p-3 text-center transition-all duration-300 ${
+              isRedirecting ? "opacity-50" : ""
+            }`}
+          >
             {isRedirecting ? (
               <div className="flex items-center justify-center gap-3">
                 <Loader2 className="h-5 w-5 animate-spin text-amber-600" />
@@ -288,7 +306,7 @@ export default function PaymentSuccessPage() {
                   <strong>⏳ Redirecting to login page in {countdown} seconds...</strong>
                 </p>
                 <div className="w-full bg-gray-200 rounded-full h-2 mt-2 overflow-hidden">
-                  <div 
+                  <div
                     className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-1000"
                     style={{ width: `${((5 - countdown) / 5) * 100}%` }}
                   />
@@ -374,13 +392,42 @@ export default function PaymentSuccessPage() {
       {/* Custom Animations */}
       <style jsx global>{`
         @keyframes float {
-          0%, 100% { transform: translateY(0px) scale(1); }
-          50% { transform: translateY(-10px) scale(1.02); }
+          0%,
+          100% {
+            transform: translateY(0px) scale(1);
+          }
+          50% {
+            transform: translateY(-10px) scale(1.02);
+          }
         }
         .animate-float {
           animation: float 3s ease-in-out infinite;
         }
       `}</style>
     </div>
-  )
+  );
+}
+
+// ============================================================
+// 🔥 🔥 🔥 MAIN PAGE - WITH SUSPENSE BOUNDARY
+// ============================================================
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+          <div className="text-center">
+            <Loader2 className="h-20 w-20 animate-spin text-emerald-400 mx-auto" />
+            <p className="text-white/80 mt-6 text-lg font-medium">Loading Success Page...</p>
+            <div className="mt-4 h-1 w-48 mx-auto bg-white/10 rounded-full overflow-hidden">
+              <div className="h-full w-1/2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full animate-pulse" />
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <SuccessContent />
+    </Suspense>
+  );
 }
