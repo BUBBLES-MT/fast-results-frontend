@@ -1,19 +1,25 @@
-"use client"
+// app/secondary/payment/page.tsx
 
-import { useState, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import axios from "axios"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { AlertCircle, CreditCard, Calendar, CheckCircle, Loader2 } from "lucide-react"
+"use client";
+
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import axios from "axios";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { AlertCircle, CreditCard, Calendar, CheckCircle, Loader2 } from "lucide-react";
+
+// ============================================================
+// 🔥 INTERFACES
+// ============================================================
 
 interface SchoolInfo {
-  id: number
-  name: string
-  subscription_expires_at: string | null
+  id: number;
+  name: string;
+  subscription_expires_at: string | null;
 }
 
 const PLANS = [
@@ -21,56 +27,70 @@ const PLANS = [
   { id: "biweekly", name: "Bi-Weekly", days: 14, price: "8,000", priceTZS: 8000 },
   { id: "monthly", name: "Monthly", days: 30, price: "15,000", priceTZS: 15000 },
   { id: "2months", name: "2 Months", days: 60, price: "25,000", priceTZS: 25000 },
-]
+];
 
-export default function PaymentPage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [school, setSchool] = useState<SchoolInfo | null>(null)
-  const [selectedPlan, setSelectedPlan] = useState("monthly")
-  const [phoneNumber, setPhoneNumber] = useState("")
-  const [step, setStep] = useState<"info" | "payment" | "success">("info")
+// ============================================================
+// 🔥 🔥 🔥 PAYMENT CONTENT COMPONENT
+// ============================================================
+
+function PaymentContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [school, setSchool] = useState<SchoolInfo | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState("monthly");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [step, setStep] = useState<"info" | "payment" | "success">("info");
+
+  // ✅ Get school_id from searchParams safely
+  const schoolId = searchParams.get("school_id");
 
   useEffect(() => {
-    const token = localStorage.getItem("token")
-    const schoolId = searchParams.get("school_id")
+    const token = localStorage.getItem("token");
     
     if (!schoolId) {
-      router.push("/login")
-      return
+      router.push("/login");
+      return;
     }
     
-    fetchSchoolInfo(schoolId)
-  }, [router, searchParams])
+    fetchSchoolInfo(schoolId);
+  }, [router, schoolId]);
 
   const fetchSchoolInfo = async (schoolId: string) => {
     try {
-      const response = await axios.get(`/api/v1/schools/${schoolId}`)
-      setSchool(response.data)
+      const token = localStorage.getItem("token");
+      const response = await axios.get(`/api/v1/schools/${schoolId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      setSchool(response.data);
     } catch (err) {
-      console.error("Error fetching school info:", err)
-      setError("Failed to load school information")
+      console.error("Error fetching school info:", err);
+      setError("Failed to load school information");
     }
-  }
+  };
 
   const handlePayment = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!phoneNumber || phoneNumber.length < 10) {
-      setError("Please enter a valid phone number")
-      return
+      setError("Please enter a valid phone number");
+      return;
     }
     
-    setLoading(true)
-    setError("")
+    setLoading(true);
+    setError("");
     
     try {
-      const plan = PLANS.find(p => p.id === selectedPlan)
+      const plan = PLANS.find(p => p.id === selectedPlan);
+      const token = localStorage.getItem("token");
+      
+      if (!token) {
+        setError("Please login first");
+        return;
+      }
       
       // Simulate payment processing
-      // In production, integrate with ClickPesa, M-Pesa, etc.
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
       // After successful payment, extend subscription
       await axios.post(
@@ -78,34 +98,40 @@ export default function PaymentPage() {
         { days: plan?.days, plan: selectedPlan },
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${token}`,
           },
         }
-      )
+      );
       
-      setStep("success")
+      setStep("success");
       
       // Redirect to login after 3 seconds
       setTimeout(() => {
-        router.push("/login")
-      }, 3000)
+        router.push("/login");
+      }, 3000);
       
     } catch (err: any) {
-      console.error("Payment error:", err)
-      setError(err.response?.data?.detail || "Payment failed. Please try again.")
+      console.error("Payment error:", err);
+      setError(err.response?.data?.detail || "Payment failed. Please try again.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const selectedPlanDetails = PLANS.find(p => p.id === selectedPlan)
+  const selectedPlanDetails = PLANS.find(p => p.id === selectedPlan);
 
   if (!school) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <div className="text-center">
+          <Loader2 className="h-20 w-20 animate-spin text-purple-400 mx-auto" />
+          <p className="text-white/80 mt-6 text-lg font-medium">Loading School Info...</p>
+          <div className="mt-4 h-1 w-48 mx-auto bg-white/10 rounded-full overflow-hidden">
+            <div className="h-full w-1/2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-pulse" />
+          </div>
+        </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -251,5 +277,29 @@ export default function PaymentPage() {
         )}
       </div>
     </div>
-  )
+  );
+}
+
+// ============================================================
+// 🔥 🔥 🔥 MAIN PAGE - WITH SUSPENSE BOUNDARY
+// ============================================================
+
+export default function SecondaryPaymentPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+          <div className="text-center">
+            <Loader2 className="h-20 w-20 animate-spin text-purple-400 mx-auto" />
+            <p className="text-white/80 mt-6 text-lg font-medium">Loading Payment...</p>
+            <div className="mt-4 h-1 w-48 mx-auto bg-white/10 rounded-full overflow-hidden">
+              <div className="h-full w-1/2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-pulse" />
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <PaymentContent />
+    </Suspense>
+  );
 }
