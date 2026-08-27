@@ -772,7 +772,7 @@ export default function PrimaryDashboardPage() {
                 <Card
                   key={index}
                   className="group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden border-0 shadow-md rounded-2xl"
-                  onClick={() => stat.onClick ? stat.onClick() : router.push(stat.href)}
+                  onClick={() => router.push(stat.href)}
                 >
                   <CardContent className="p-0">
                     <div className={`p-6 bg-gradient-to-br ${stat.gradient}`}>
