@@ -54,6 +54,11 @@ interface SubjectGradeData {
   position: number;
 }
 
+interface DivisionData {
+  M: number;
+  F: number;
+}
+
 interface SummaryData {
   school_name: string;
   region: string;
@@ -61,11 +66,11 @@ interface SummaryData {
   exam_type: string;
   year: number;
   division_summary: {
-    I: { M: number; F: number };
-    II: { M: number; F: number };
-    III: { M: number; F: number };
-    IV: { M: number; F: number };
-    O: { M: number; F: number };
+    I: DivisionData;
+    II: DivisionData;
+    III: DivisionData;
+    IV: DivisionData;
+    O: DivisionData;
     total_male: number;
     total_female: number;
     total_students: number;
@@ -93,7 +98,7 @@ interface SummaryData {
     subject: string;
     grades: { A: number; B: number; C: number; D: number; F: number };
   }>;
-  subject_gpa_data?: SubjectGradeData[];
+  subject_gpa_data: SubjectGradeData[];
 }
 
 const DEFAULT_EXAM_TYPES = ["MIDTERM3", "MIDTERM9", "TERMINAL", "ANNUAL", "JOINT MOCK"];
@@ -184,6 +189,17 @@ export default function ClassSummaryPage() {
     }
   };
 
+  // 🔥 Type-safe helper function
+  const getDivisionValue = (data: DivisionData | undefined | null, key: keyof DivisionData): number => {
+    if (!data) return 0;
+    return data[key] || 0;
+  };
+
+  const getDivisionTotal = (data: DivisionData | undefined | null): number => {
+    if (!data) return 0;
+    return (data.M || 0) + (data.F || 0);
+  };
+
   const calculateSubjectGPA = (subjectGradeSummary: any[]): SubjectGradeData[] => {
     const gradePoints: { [key: string]: number } = { 
       A: 1, B: 2, C: 3, D: 4, F: 5
@@ -250,6 +266,8 @@ export default function ClassSummaryPage() {
         if (data.subject_grade_summary && data.subject_grade_summary.length > 0) {
           const subjectGPAData = calculateSubjectGPA(data.subject_grade_summary);
           data.subject_gpa_data = subjectGPAData;
+        } else {
+          data.subject_gpa_data = [];
         }
         
         setSummaryData(data);
@@ -461,7 +479,7 @@ export default function ClassSummaryPage() {
                 <h3 className="text-lg font-bold text-gray-800">{summaryData.school_name}</h3>
               </div>
 
-              {/* Division & Registration Summary */}
+              {/* 🔥 Division & Registration Summary - TYPE SAFE! */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card className="shadow-md overflow-hidden">
                   <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 py-3">
@@ -482,14 +500,18 @@ export default function ClassSummaryPage() {
                       </thead>
                       <tbody>
                         {["I", "II", "III", "IV", "O"].map((div) => {
-                          const divData = summaryData.division_summary[div as keyof typeof summaryData.division_summary];
-                          if (!divData) return null;
+                          const key = div as keyof typeof summaryData.division_summary;
+                          const divData = summaryData.division_summary[key];
+                          // Type guard to ensure divData is DivisionData
+                          const safeData = (divData && typeof divData === 'object' && 'M' in divData && 'F' in divData) 
+                            ? divData as DivisionData 
+                            : null;
                           return (
                             <tr key={div}>
                               <td className="border p-1 text-center font-bold">{div}</td>
-                              <td className="border p-1 text-center">{divData.M || 0}</td>
-                              <td className="border p-1 text-center">{divData.F || 0}</td>
-                              <td className="border p-1 text-center">{(divData.M || 0) + (divData.F || 0)}</td>
+                              <td className="border p-1 text-center">{safeData ? getDivisionValue(safeData, 'M') : 0}</td>
+                              <td className="border p-1 text-center">{safeData ? getDivisionValue(safeData, 'F') : 0}</td>
+                              <td className="border p-1 text-center">{safeData ? getDivisionTotal(safeData) : 0}</td>
                             </tr>
                           );
                         })}
@@ -598,7 +620,7 @@ export default function ClassSummaryPage() {
                 </CardContent>
               </Card>
 
-              {/* Subject Grade Summary - AT THE END - FIXED VERSION */}
+              {/* 🔥 Subject Grade Summary */}
               {summaryData.subject_gpa_data && summaryData.subject_gpa_data.length > 0 && (
                 <Card className="shadow-md overflow-hidden">
                   <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">
@@ -619,110 +641,39 @@ export default function ClassSummaryPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {/* A Grade */}
-                        <tr className="bg-emerald-50">
-                          <td rowSpan={3} className="border p-2 text-center font-bold text-emerald-700 align-middle">A</td>
-                          <td className="border p-2 text-center">M</td>
-                          {summaryData.subject_gpa_data.map((subj) => (
-                            <td key={subj.subject} className="border p-2 text-center">{subj.A.Total}</td>
-                          ))}
-                        </tr>
-                        <tr className="bg-emerald-50">
-                          <td className="border p-2 text-center">F</td>
-                          {summaryData.subject_gpa_data.map((subj) => (
-                            <td key={subj.subject} className="border p-2 text-center">{subj.A.Total}</td>
-                          ))}
-                        </tr>
-                        <tr className="bg-emerald-50">
-                          <td className="border p-2 text-center font-bold">Total</td>
-                          {summaryData.subject_gpa_data.map((subj) => (
-                            <td key={subj.subject} className="border p-2 text-center font-bold">{subj.A.Total}</td>
-                          ))}
-                        </tr>
-
-                        {/* B Grade */}
-                        <tr className="bg-blue-50">
-                          <td rowSpan={3} className="border p-2 text-center font-bold text-blue-700 align-middle">B</td>
-                          <td className="border p-2 text-center">M</td>
-                          {summaryData.subject_gpa_data.map((subj) => (
-                            <td key={subj.subject} className="border p-2 text-center">{subj.B.Total}</td>
-                          ))}
-                        </tr>
-                        <tr className="bg-blue-50">
-                          <td className="border p-2 text-center">F</td>
-                          {summaryData.subject_gpa_data.map((subj) => (
-                            <td key={subj.subject} className="border p-2 text-center">{subj.B.Total}</td>
-                          ))}
-                        </tr>
-                        <tr className="bg-blue-50">
-                          <td className="border p-2 text-center font-bold">Total</td>
-                          {summaryData.subject_gpa_data.map((subj) => (
-                            <td key={subj.subject} className="border p-2 text-center font-bold">{subj.B.Total}</td>
-                          ))}
-                        </tr>
-
-                        {/* C Grade */}
-                        <tr className="bg-amber-50">
-                          <td rowSpan={3} className="border p-2 text-center font-bold text-amber-700 align-middle">C</td>
-                          <td className="border p-2 text-center">M</td>
-                          {summaryData.subject_gpa_data.map((subj) => (
-                            <td key={subj.subject} className="border p-2 text-center">{subj.C.Total}</td>
-                          ))}
-                        </tr>
-                        <tr className="bg-amber-50">
-                          <td className="border p-2 text-center">F</td>
-                          {summaryData.subject_gpa_data.map((subj) => (
-                            <td key={subj.subject} className="border p-2 text-center">{subj.C.Total}</td>
-                          ))}
-                        </tr>
-                        <tr className="bg-amber-50">
-                          <td className="border p-2 text-center font-bold">Total</td>
-                          {summaryData.subject_gpa_data.map((subj) => (
-                            <td key={subj.subject} className="border p-2 text-center font-bold">{subj.C.Total}</td>
-                          ))}
-                        </tr>
-
-                        {/* D Grade */}
-                        <tr className="bg-orange-50">
-                          <td rowSpan={3} className="border p-2 text-center font-bold text-orange-700 align-middle">D</td>
-                          <td className="border p-2 text-center">M</td>
-                          {summaryData.subject_gpa_data.map((subj) => (
-                            <td key={subj.subject} className="border p-2 text-center">{subj.D.Total}</td>
-                          ))}
-                        </tr>
-                        <tr className="bg-orange-50">
-                          <td className="border p-2 text-center">F</td>
-                          {summaryData.subject_gpa_data.map((subj) => (
-                            <td key={subj.subject} className="border p-2 text-center">{subj.D.Total}</td>
-                          ))}
-                        </tr>
-                        <tr className="bg-orange-50">
-                          <td className="border p-2 text-center font-bold">Total</td>
-                          {summaryData.subject_gpa_data.map((subj) => (
-                            <td key={subj.subject} className="border p-2 text-center font-bold">{subj.D.Total}</td>
-                          ))}
-                        </tr>
-
-                        {/* F Grade */}
-                        <tr className="bg-red-50">
-                          <td rowSpan={3} className="border p-2 text-center font-bold text-red-700 align-middle">F</td>
-                          <td className="border p-2 text-center">M</td>
-                          {summaryData.subject_gpa_data.map((subj) => (
-                            <td key={subj.subject} className="border p-2 text-center">{subj.F.Total}</td>
-                          ))}
-                        </tr>
-                        <tr className="bg-red-50">
-                          <td className="border p-2 text-center">F</td>
-                          {summaryData.subject_gpa_data.map((subj) => (
-                            <td key={subj.subject} className="border p-2 text-center">{subj.F.Total}</td>
-                          ))}
-                        </tr>
-                        <tr className="bg-red-50">
-                          <td className="border p-2 text-center font-bold">Total</td>
-                          {summaryData.subject_gpa_data.map((subj) => (
-                            <td key={subj.subject} className="border p-2 text-center font-bold">{subj.F.Total}</td>
-                          ))}
-                        </tr>
+                        {["A", "B", "C", "D", "F"].map((grade) => (
+                          <Fragment key={grade}>
+                            <tr className={`${grade === 'A' ? 'bg-emerald-50' : grade === 'B' ? 'bg-blue-50' : grade === 'C' ? 'bg-amber-50' : grade === 'D' ? 'bg-orange-50' : 'bg-red-50'}`}>
+                              <td rowSpan={3} className="border p-2 text-center font-bold align-middle">
+                                <span className={grade === 'A' ? 'text-emerald-700' : grade === 'B' ? 'text-blue-700' : grade === 'C' ? 'text-amber-700' : grade === 'D' ? 'text-orange-700' : 'text-red-700'}>
+                                  {grade}
+                                </span>
+                              </td>
+                              <td className="border p-2 text-center">M</td>
+                              {summaryData.subject_gpa_data.map((subj) => {
+                                const key = grade as keyof Pick<SubjectGradeData, 'A' | 'B' | 'C' | 'D' | 'F'>;
+                                const data = subj[key] as GradeData;
+                                return <td key={subj.subject} className="border p-2 text-center">{data?.Total || 0}</td>;
+                              })}
+                            </tr>
+                            <tr className={`${grade === 'A' ? 'bg-emerald-50' : grade === 'B' ? 'bg-blue-50' : grade === 'C' ? 'bg-amber-50' : grade === 'D' ? 'bg-orange-50' : 'bg-red-50'}`}>
+                              <td className="border p-2 text-center">F</td>
+                              {summaryData.subject_gpa_data.map((subj) => {
+                                const key = grade as keyof Pick<SubjectGradeData, 'A' | 'B' | 'C' | 'D' | 'F'>;
+                                const data = subj[key] as GradeData;
+                                return <td key={subj.subject} className="border p-2 text-center">{data?.Total || 0}</td>;
+                              })}
+                            </tr>
+                            <tr className={`${grade === 'A' ? 'bg-emerald-50' : grade === 'B' ? 'bg-blue-50' : grade === 'C' ? 'bg-amber-50' : grade === 'D' ? 'bg-orange-50' : 'bg-red-50'}`}>
+                              <td className="border p-2 text-center font-bold">Total</td>
+                              {summaryData.subject_gpa_data.map((subj) => {
+                                const key = grade as keyof Pick<SubjectGradeData, 'A' | 'B' | 'C' | 'D' | 'F'>;
+                                const data = subj[key] as GradeData;
+                                return <td key={subj.subject} className="border p-2 text-center font-bold">{data?.Total || 0}</td>;
+                              })}
+                            </tr>
+                          </Fragment>
+                        ))}
 
                         {/* GPA Row */}
                         <tr className="bg-gray-100 font-bold">
