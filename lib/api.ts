@@ -327,7 +327,11 @@ export const clearAuth = (): void => {
 };
 
 // ============================================================
-// 🔥 EXPORT
+// 🔥 EXPORT - BOTH default AND named!
 // ============================================================
 
+// Default export (for import api from '@/lib/api')
 export default api;
+
+// Named export (for import { api } from '@/lib/api')
+export { api };
