@@ -8,9 +8,8 @@ import type { NextConfig } from "next";
  */
 
 // Determine backend URL
-// Priority: NEXT_PUBLIC_API_URL > BACKEND_URL > localhost:8000
 const getBackendUrl = (): string => {
-  // For production (Vercel), use NEXT_PUBLIC_API_URL
+  // 🔥 MUHIMU: Angalia NEXT_PUBLIC_API_URL kwanza
   if (process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
   }
@@ -22,7 +21,6 @@ const getBackendUrl = (): string => {
 
 const backendBase = getBackendUrl();
 
-// Determine if running on Vercel (production)
 const isVercel = process.env.VERCEL === "1";
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -32,20 +30,29 @@ console.log(`   Vercel: ${isVercel}`);
 console.log(`   Backend URL: ${backendBase}`);
 
 const nextConfig: NextConfig = {
-  // 🔥 Images configuration
+  // 🔥 Images configuration - FIXED!
   images: {
-    domains: [
-      "localhost",
-      "127.0.0.1",
-      "*.vercel.app",
-      "*.render.com",
-      "*.supabase.co",
-      "*.cloudinary.com",
-    ],
+    // ✅ REMOVE domains (deprecated)
     remotePatterns: [
       {
         protocol: "https",
         hostname: "**",
+      },
+      {
+        protocol: "http",
+        hostname: "localhost",
+      },
+      {
+        protocol: "https",
+        hostname: "*.vercel.app",
+      },
+      {
+        protocol: "https",
+        hostname: "*.render.com",
+      },
+      {
+        protocol: "https",
+        hostname: "*.supabase.co",
       },
     ],
   },
@@ -60,7 +67,6 @@ const nextConfig: NextConfig = {
   // 🔥 API Rewrites (ONLY for local development!)
   async rewrites() {
     // Skip rewrites in production (Vercel)
-    // Instead, frontend will use NEXT_PUBLIC_API_URL directly
     if (isProduction || isVercel) {
       console.log("🚀 Production mode: Rewrites disabled");
       return [];
@@ -69,14 +75,13 @@ const nextConfig: NextConfig = {
     console.log("🔄 Development mode: Rewrites enabled");
     return [
       {
-        source: "/api/:path*",  // Also catch /api/* (without /v1)
+        source: "/api/:path*",
         destination: `${backendBase}/api/:path*`,
       },
       {
         source: "/api/v1/:path*",
         destination: `${backendBase}/api/v1/:path*`,
       },
-      // Add specific routes if needed
       {
         source: "/docs",
         destination: `${backendBase}/docs`,
@@ -88,7 +93,6 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // 🔥 Redirects (optional)
   async redirects() {
     return [
       {
@@ -99,7 +103,6 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // 🔥 Headers for security
   async headers() {
     return [
       {
@@ -122,31 +125,15 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // 🔥 Output configuration for Vercel
-  output: "standalone",  // For better Vercel deployment
+  output: "standalone",
 
-  // 🔥 Compiler options
   compiler: {
-    removeConsole: isProduction,  // Remove console.log in production
+    removeConsole: isProduction,
   },
 
-  // 🔥 Powered by header
   poweredByHeader: false,
-
-  // 🔥 React strict mode
   reactStrictMode: true,
-
-  // 🔥 SWC minification
-  //swcMinify: true,
-
-  // 🔥 Trailing slashes
   trailingSlash: false,
-
-  // 🔥 Experimental features
-  experimental: {
-    // optimizeCss: true,  // Uncomment if needed
-    // serverActions: true, // For Next.js 14+
-  },
 };
 
 export default nextConfig;
