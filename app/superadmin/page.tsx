@@ -64,6 +64,11 @@ import {
   CreditCard,
 } from "lucide-react"
 
+// ============================================================
+// 🔥 API BASE URL - Works EVERYWHERE!
+// ============================================================
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+
 interface School {
   id: number
   name: string
@@ -235,9 +240,10 @@ export default function SuperAdminPage() {
     fetchData()
   }, [router])
 
+  // 🔥 FETCH SCHOOLS - FIXED!
   const fetchSchools = async (authToken: string) => {
     try {
-      const response = await axios.get("/api/v1/superadmin/schools", {
+      const response = await axios.get(`${API_BASE}/api/v1/superadmin/schools`, {
         headers: { Authorization: `Bearer ${authToken}` },
         timeout: 15000
       })
@@ -254,9 +260,10 @@ export default function SuperAdminPage() {
     }
   }
 
+  // 🔥 FETCH STATS - FIXED!
   const fetchStats = async (authToken: string) => {
     try {
-      const response = await axios.get("/api/v1/superadmin/stats", {
+      const response = await axios.get(`${API_BASE}/api/v1/superadmin/stats`, {
         headers: { Authorization: `Bearer ${authToken}` },
         timeout: 15000
       })
@@ -275,7 +282,7 @@ export default function SuperAdminPage() {
   }
 
   // ============================================================
-  // 🔥 ADD SCHOOL
+  // 🔥 ADD SCHOOL - FIXED!
   // ============================================================
   const handleAddSchool = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -285,7 +292,7 @@ export default function SuperAdminPage() {
     
     try {
       const response = await axios.post(
-        "/api/v1/superadmin/schools",
+        `${API_BASE}/api/v1/superadmin/schools`,
         newSchool,
         { headers: { Authorization: `Bearer ${token}` } }
       )
@@ -311,12 +318,12 @@ export default function SuperAdminPage() {
   }
 
   // ============================================================
-  // 🔥 TOGGLE LOCK
+  // 🔥 TOGGLE LOCK - FIXED!
   // ============================================================
   const handleToggleLock = async (schoolId: number, isLocked: boolean) => {
     try {
       await axios.put(
-        `/api/v1/superadmin/schools/${schoolId}/lock`,
+        `${API_BASE}/api/v1/superadmin/schools/${schoolId}/lock`,
         { is_locked: !isLocked },
         { headers: { Authorization: `Bearer ${token}` } }
       )
@@ -329,24 +336,10 @@ export default function SuperAdminPage() {
     }
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
   // ============================================================
-// 🔥 TOGGLE ACTIVE/DEACTIVATE - FIXED!
-// ============================================================
-const handleToggleActive = async () => {
+  // 🔥 TOGGLE ACTIVE/DEACTIVATE - FIXED!
+  // ============================================================
+  const handleToggleActive = async () => {
     if (!toggleSchool) return
     
     setToggleLoading(true)
@@ -357,16 +350,15 @@ const handleToggleActive = async () => {
         const isActive = toggleAction === "activate"
         let response
         
-        // ✅ TUMIA ENDPOINT MPYA - ACTIVATE/DEACTIVATE
         if (isActive) {
             response = await axios.put(
-                `/api/v1/superadmin/schools/${toggleSchool.id}/activate`,
+                `${API_BASE}/api/v1/superadmin/schools/${toggleSchool.id}/activate`,
                 {},
                 { headers: { Authorization: `Bearer ${token}` } }
             )
         } else {
             response = await axios.put(
-                `/api/v1/superadmin/schools/${toggleSchool.id}/deactivate`,
+                `${API_BASE}/api/v1/superadmin/schools/${toggleSchool.id}/deactivate`,
                 {},
                 { headers: { Authorization: `Bearer ${token}` } }
             )
@@ -383,27 +375,10 @@ const handleToggleActive = async () => {
     } finally {
         setToggleLoading(false)
     }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  }
 
   // ============================================================
-  // 🔥 VIEW SCHOOL STATUS
+  // 🔥 VIEW SCHOOL STATUS - FIXED!
   // ============================================================
   const handleViewStatus = async (schoolId: number) => {
     setStatusLoading(true)
@@ -411,7 +386,7 @@ const handleToggleActive = async () => {
     
     try {
       const response = await axios.get(
-        `/api/v1/superadmin/schools/${schoolId}/status`,
+        `${API_BASE}/api/v1/superadmin/schools/${schoolId}/status`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       setStatusSchool(response.data)
@@ -436,7 +411,7 @@ const handleToggleActive = async () => {
   }
 
   // ============================================================
-  // 🔥 EXTEND SUBSCRIPTION - ILIYOBORESHA!
+  // 🔥 EXTEND SUBSCRIPTION - FIXED!
   // ============================================================
   const handleExtendSubscription = async () => {
     if (!selectedSchool) return
@@ -448,20 +423,18 @@ const handleToggleActive = async () => {
       console.log(`📡 Extending subscription for school ${selectedSchool.id}...`)
       console.log(`📡 Plan: ${subscriptionPlan}, Days: ${subscriptionDays}`)
       
-      // ✅ JARIBU ENDPOINT YA KWANZA
       let response
       try {
         response = await axios.post(
-          `/api/v1/superadmin/schools/${selectedSchool.id}/extend-subscription`,
+          `${API_BASE}/api/v1/superadmin/schools/${selectedSchool.id}/extend-subscription`,
           { plan: subscriptionPlan, days: subscriptionDays },
           { headers: { Authorization: `Bearer ${token}` } }
         )
       } catch (firstError: any) {
-        // ✅ IKIWA ENDPOINT YA KWANZA INAKATAZA, JARIBU ENDPOINT YA PILI
         if (firstError.response?.status === 403) {
           console.log("⚠️ First endpoint returned 403, trying manual endpoint...")
           response = await axios.post(
-            `/api/v1/superadmin/schools/${selectedSchool.id}/extend-subscription-manual`,
+            `${API_BASE}/api/v1/superadmin/schools/${selectedSchool.id}/extend-subscription-manual`,
             { plan: subscriptionPlan, days: subscriptionDays },
             { headers: { Authorization: `Bearer ${token}` } }
           )
@@ -480,7 +453,6 @@ const handleToggleActive = async () => {
     } catch (err: any) {
       console.error("❌ Error extending subscription:", err)
       
-      // ✅ ERROR MESSAGE BORA
       if (err.response?.status === 403) {
         setError("⚠️ Access denied. Make sure you are logged in as Superadmin and have the right permissions. Please try refreshing the page.")
       } else if (err.response?.status === 404) {
@@ -492,21 +464,21 @@ const handleToggleActive = async () => {
   }
 
   // ============================================================
-  // 🔥 IMPERSONATE
+  // 🔥 IMPERSONATE - FIXED!
   // ============================================================
   const handleImpersonate = async (schoolId: number, schoolName: string) => {
     try {
       setSuccess(`Logging into ${schoolName}...`)
       
       const academicResponse = await axios.get(
-        `/api/v1/superadmin/schools/${schoolId}/academic`,
+        `${API_BASE}/api/v1/superadmin/schools/${schoolId}/academic`,
         { headers: { Authorization: `Bearer ${token}` }, timeout: 5000 }
       )
       
       if (academicResponse.data && academicResponse.data.id) {
         const academicId = academicResponse.data.id
         const response = await axios.post(
-          `/api/v1/superadmin/impersonate/${schoolId}?user_id=${academicId}`,
+          `${API_BASE}/api/v1/superadmin/impersonate/${schoolId}?user_id=${academicId}`,
           {},
           { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
         )
@@ -540,14 +512,14 @@ const handleToggleActive = async () => {
     // Try Headmaster
     try {
       const headResponse = await axios.get(
-        `/api/v1/superadmin/schools/${schoolId}/head`,
+        `${API_BASE}/api/v1/superadmin/schools/${schoolId}/head`,
         { headers: { Authorization: `Bearer ${token}` }, timeout: 5000 }
       )
       
       if (headResponse.data && headResponse.data.id) {
         const headId = headResponse.data.id
         const response = await axios.post(
-          `/api/v1/superadmin/impersonate/${schoolId}?user_id=${headId}`,
+          `${API_BASE}/api/v1/superadmin/impersonate/${schoolId}?user_id=${headId}`,
           {},
           { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
         )
@@ -581,7 +553,7 @@ const handleToggleActive = async () => {
     // Default impersonation
     try {
       const response = await axios.post(
-        `/api/v1/superadmin/impersonate/${schoolId}`,
+        `${API_BASE}/api/v1/superadmin/impersonate/${schoolId}`,
         {},
         { headers: { Authorization: `Bearer ${token}` }, timeout: 10000 }
       )
@@ -620,7 +592,7 @@ const handleToggleActive = async () => {
   }
 
   // ============================================================
-  // 🔥 DELETE SCHOOL
+  // 🔥 DELETE SCHOOL - FIXED!
   // ============================================================
   const handleDeleteSchool = async (schoolId: number, schoolName: string) => {
     const confirmed = window.confirm(
@@ -637,7 +609,7 @@ const handleToggleActive = async () => {
     
     try {
       await axios.delete(
-        `/api/v1/superadmin/schools/${schoolId}`,
+        `${API_BASE}/api/v1/superadmin/schools/${schoolId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       setSuccess(`School "${schoolName}" deleted successfully!`)
