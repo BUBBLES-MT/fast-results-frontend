@@ -3,33 +3,37 @@
 import axios, { AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 
 // ============================================================
-// 🔥 BASE URL CONFIGURATION - Works everywhere!
+// 🔥 BASE URL CONFIGURATION - FIXED!
 // ============================================================
 
 /**
  * Determines the base URL for API calls
- * - Browser: Uses relative path (Next.js rewrites handle it)
+ * - Browser: Uses NEXT_PUBLIC_API_URL if available (production)
+ * - Browser: Uses relative path if no env (development with rewrites)
  * - Server: Uses full URL (for RSC/Server Components)
- * - Production (Vercel): Uses NEXT_PUBLIC_API_URL
  */
 const getBaseURL = (): string => {
-  // 🔥 For browser: use relative path (Next.js rewrites)
+  // 🔥 Kwa browser
   if (typeof window !== 'undefined') {
-    // In production (Vercel), we might want absolute URL
-    if (process.env.NEXT_PUBLIC_IS_VERCEL === '1') {
-      return process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || '';
+    // 🔥 MUHIMU: Angalia NEXT_PUBLIC_API_URL kwanza
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (apiUrl) {
+      console.log('🔧 Using API URL from env:', apiUrl);
+      return apiUrl.replace(/\/$/, '');
     }
-    // Local development: use relative path
+    
+    // 🔥 Ikiwa hakuna env, tumia relative path (kwa local development)
+    console.log('🔧 Using relative path (development mode)');
     return '';
   }
 
-  // 🔥 For server-side (RSC, Server Components)
+  // 🔥 Kwa server-side (RSC, Server Components)
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.BACKEND_URL;
   if (apiUrl) {
     return apiUrl.replace(/\/$/, '');
   }
 
-  // Fallback for local server-side
+  // Fallback kwa local server-side
   return 'http://127.0.0.1:8000';
 };
 
@@ -49,21 +53,20 @@ if (process.env.NODE_ENV === 'development') {
 
 const api = axios.create({
   baseURL,
-  timeout: 30000, // Increased to 30 seconds for slow connections
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
   },
-  withCredentials: false, // Set to true if using cookies
+  withCredentials: false,
 });
 
 // ============================================================
-// 🔥 REQUEST INTERCEPTOR (Attach token & logging)
+// 🔥 REQUEST INTERCEPTOR
 // ============================================================
 
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
-    // 🔥 Attach authentication token (browser only)
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('token');
       const userType = localStorage.getItem('user_type');
@@ -71,14 +74,12 @@ api.interceptors.request.use(
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
         
-        // Optional: Add user type header for debugging
         if (userType) {
           config.headers['X-User-Type'] = userType;
         }
       }
     }
 
-    // 🔥 Log requests in development
     if (process.env.NODE_ENV === 'development') {
       const fullUrl = config.baseURL 
         ? `${config.baseURL}${config.url}` 
@@ -90,9 +91,6 @@ api.interceptors.request.use(
       }
     }
 
-    // 🔥 Add timestamp to prevent caching (optional)
-    // config.params = { ...config.params, _t: Date.now() };
-
     return config;
   },
   (error) => {
@@ -102,37 +100,30 @@ api.interceptors.request.use(
 );
 
 // ============================================================
-// 🔥 RESPONSE INTERCEPTOR (Handle responses & errors)
+// 🔥 RESPONSE INTERCEPTOR
 // ============================================================
 
 api.interceptors.response.use(
   (response: AxiosResponse): AxiosResponse => {
-    // 🔥 Log responses in development
     if (process.env.NODE_ENV === 'development') {
       console.log(`✅ [API Response] ${response.status} ${response.config.url}`);
     }
     return response;
   },
   async (error: AxiosError<any>): Promise<any> => {
-    // 🔥 Get error details
     const status = error.response?.status;
-    const statusText = error.response?.statusText;
     const data = error.response?.data;
     const message = data?.detail || data?.message || error.message || 'Something went wrong. Please try again.';
 
-    // 🔥 Log error in development
     if (process.env.NODE_ENV === 'development') {
       console.error(`❌ [API Error] ${status} ${error.config?.url}`);
       console.error(`   Message: ${message}`);
       console.error(`   Data:`, data);
     }
 
-    // 🔥 Handle specific status codes
     switch (status) {
-      // 401 Unauthorized - Token expired or invalid
       case 401:
         if (typeof window !== 'undefined') {
-          // Clear all auth data
           localStorage.removeItem('token');
           localStorage.removeItem('user_type');
           localStorage.removeItem('user_name');
@@ -140,7 +131,6 @@ api.interceptors.response.use(
           localStorage.removeItem('school_id');
           localStorage.removeItem('school_level');
           
-          // Redirect to login if not already there
           if (!window.location.pathname.includes('/login') && 
               !window.location.pathname.includes('/parent/login')) {
             window.location.href = '/login';
@@ -148,76 +138,61 @@ api.interceptors.response.use(
         }
         break;
 
-      // 402 Payment Required - Subscription expired
       case 402:
         if (typeof window !== 'undefined') {
           const schoolId = data?.school_id || data?.schoolId;
           const schoolName = data?.school_name || data?.schoolName || 'Shule yako';
           
-          // Redirect to payment page
           if (schoolId) {
             window.location.href = `/payment?school_id=${schoolId}&school_name=${encodeURIComponent(schoolName)}`;
           } else {
-            // Show error message
             console.error('Subscription expired. Please contact support.');
           }
         }
         break;
 
-      // 403 Forbidden - Access denied
       case 403:
         if (typeof window !== 'undefined') {
-          // Check if it's a subscription expired message
           if (data?.error === 'SUBSCRIPTION_EXPIRED' || 
               data?.error === 'SCHOOL_LOCKED' ||
               message.includes('subscription') ||
               message.includes('expired')) {
-            // Redirect to payment
             const schoolId = data?.school_id || data?.schoolId;
             if (schoolId) {
               window.location.href = `/payment?school_id=${schoolId}`;
             }
           } else {
             console.warn('Access denied:', message);
-            // Could show a toast/notification here
           }
         }
         break;
 
-      // 404 Not Found
       case 404:
         console.warn('Resource not found:', error.config?.url);
         break;
 
-      // 422 Validation Error
       case 422:
         console.warn('Validation error:', data);
         break;
 
-      // 429 Too Many Requests
       case 429:
         console.warn('Rate limit exceeded. Please wait and try again.');
         break;
 
-      // 500+ Server Error
       case 500:
       case 502:
       case 503:
       case 504:
         console.error('Server error:', status, message);
-        // Could show a toast/notification here
         break;
 
-      // Network error (no response)
       default:
         if (!error.response) {
           console.error('Network error - Backend might be down:', error.message);
-          // Could show a toast/notification here
         }
         break;
     }
 
-    // 🔥 Return a user-friendly error message
     const userMessage = 
       status === 401 ? 'Your session has expired. Please login again.' :
       status === 402 ? 'Subscription expired. Please renew to continue.' :
@@ -228,7 +203,6 @@ api.interceptors.response.use(
       !error.response ? 'Network error. Please check your connection.' :
       message;
 
-    // 🔥 Return error with additional context
     const enhancedError = {
       status,
       message: userMessage,
@@ -245,9 +219,6 @@ api.interceptors.response.use(
 // 🔥 HELPER FUNCTIONS
 // ============================================================
 
-/**
- * Get full URL for an endpoint
- */
 export const getApiUrl = (endpoint: string): string => {
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   
@@ -258,34 +229,22 @@ export const getApiUrl = (endpoint: string): string => {
   return cleanEndpoint;
 };
 
-/**
- * Check if user is authenticated
- */
 export const isAuthenticated = (): boolean => {
   if (typeof window === 'undefined') return false;
   const token = localStorage.getItem('token');
   return !!token;
 };
 
-/**
- * Get current user type
- */
 export const getUserType = (): string | null => {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem('user_type');
 };
 
-/**
- * Get current user name
- */
 export const getUserName = (): string | null => {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem('user_name');
 };
 
-/**
- * Logout user
- */
 export const logout = (redirect: boolean = true): void => {
   if (typeof window === 'undefined') return;
   
@@ -309,16 +268,11 @@ export const logout = (redirect: boolean = true): void => {
   }
 };
 
-/**
- * Clear all auth data (for security)
- */
 export const clearAuth = (): void => {
   if (typeof window === 'undefined') return;
   
-  // Clear localStorage
   localStorage.clear();
   
-  // Clear cookies if needed
   document.cookie.split(';').forEach(cookie => {
     document.cookie = cookie
       .replace(/^ +/, '')
@@ -327,11 +281,8 @@ export const clearAuth = (): void => {
 };
 
 // ============================================================
-// 🔥 EXPORT - BOTH default AND named!
+// 🔥 EXPORT
 // ============================================================
 
-// Default export (for import api from '@/lib/api')
 export default api;
-
-// Named export (for import { api } from '@/lib/api')
 export { api };
