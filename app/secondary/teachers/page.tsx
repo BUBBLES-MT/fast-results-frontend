@@ -57,6 +57,7 @@ import {
   Shield,
   RefreshCw,
   Globe,
+  Edit,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -279,7 +280,6 @@ function MobileStatCard({
           <Icon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
         </div>
       </div>
-      {/* 🔥 Animation line at bottom */}
       <div className="mt-2 h-0.5 w-full bg-white/20 rounded-full overflow-hidden">
         <div className="h-full w-1/2 bg-white/40 rounded-full animate-pulse-soft" />
       </div>
@@ -416,6 +416,11 @@ export default function TeachersPage() {
     router.push(`/secondary/teachers/${teacherId}/assign`);
   };
 
+  // 🔥🔥🔥 BUTTON YA KUHARIRI - SECONDARY 🔥🔥🔥
+  const handleEditTeacher = (teacherId: number) => {
+    router.push(`/secondary/teachers/edit/${teacherId}`);
+  };
+
   const handleRetry = () => {
     if (token) {
       fetchTeachers(token);
@@ -429,7 +434,6 @@ export default function TeachersPage() {
       teacher.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Calculate stats
   const totalTeachers = teachers.length;
   const activeTeachers = teachers.filter((t) => t.active).length;
   const inactiveTeachers = totalTeachers - activeTeachers;
@@ -454,10 +458,8 @@ export default function TeachersPage() {
   return (
     <MainLayout>
       <div className="space-y-4 sm:space-y-6 p-3 sm:p-4 md:p-6 max-w-7xl mx-auto animate-fadeIn">
-        {/* Back Button */}
         <MobileBackButton />
 
-        {/* Header */}
         <MobileHeader
           title="Teachers Management"
           subtitle={`All registered teachers • School ID: ${userSchoolId}`}
@@ -483,7 +485,6 @@ export default function TeachersPage() {
 
         {/* 🔥🔥🔥 STATS GRID - PRO MAX SIZE! 🔥🔥🔥 */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
-          {/* 1. Total Teachers */}
           <div className="rounded-2xl sm:rounded-3xl p-4 sm:p-5 md:p-6 lg:p-7 text-white shadow-xl bg-gradient-to-r from-blue-500 to-indigo-500 hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-default">
             <div className="flex items-start justify-between">
               <div>
@@ -503,7 +504,6 @@ export default function TeachersPage() {
             </div>
           </div>
 
-          {/* 2. Active */}
           <div className="rounded-2xl sm:rounded-3xl p-4 sm:p-5 md:p-6 lg:p-7 text-white shadow-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-default">
             <div className="flex items-start justify-between">
               <div>
@@ -523,7 +523,6 @@ export default function TeachersPage() {
             </div>
           </div>
 
-          {/* 3. Inactive */}
           <div className="rounded-2xl sm:rounded-3xl p-4 sm:p-5 md:p-6 lg:p-7 text-white shadow-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-default">
             <div className="flex items-start justify-between">
               <div>
@@ -543,7 +542,6 @@ export default function TeachersPage() {
             </div>
           </div>
 
-          {/* 4. Roles */}
           <div className="rounded-2xl sm:rounded-3xl p-4 sm:p-5 md:p-6 lg:p-7 text-white shadow-xl bg-gradient-to-r from-purple-500 to-pink-500 hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-default">
             <div className="flex items-start justify-between">
               <div>
@@ -564,7 +562,6 @@ export default function TeachersPage() {
           </div>
         </div>
 
-        {/* Messages */}
         {success && <MobileAlert type="success" message={success} onClose={() => setSuccess("")} />}
         {error && (
           <MobileAlert
@@ -584,7 +581,6 @@ export default function TeachersPage() {
           </MobileAlert>
         )}
 
-        {/* Search */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <MobileCard hover={false} className="flex-1" delay={100}>
             <div className="h-1 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
@@ -605,7 +601,6 @@ export default function TeachersPage() {
           </p>
         </div>
 
-        {/* Teachers Table */}
         <MobileCard delay={200}>
           <div className="h-1 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
           <CardHeader className="p-4 sm:p-6 bg-white/50 backdrop-blur-sm border-b border-gray-100">
@@ -628,7 +623,7 @@ export default function TeachersPage() {
                     <TableHead className="text-xs sm:text-sm hidden md:table-cell">Email</TableHead>
                     <TableHead className="text-xs sm:text-sm hidden lg:table-cell">Role</TableHead>
                     <TableHead className="text-xs sm:text-sm hidden xl:table-cell">Status</TableHead>
-                    <TableHead className="text-right text-xs sm:text-sm w-20 sm:w-28">Actions</TableHead>
+                    <TableHead className="text-right text-xs sm:text-sm w-24 sm:w-32">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -703,13 +698,23 @@ export default function TeachersPage() {
                           </span>
                         </TableCell>
                         <TableCell className="text-right">
+                          {/* 🔥🔥🔥 VITENDO VILIVYOBORESHA - NA BUTTON YA EDIT! 🔥🔥🔥 */}
                           <div className="flex justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditTeacher(teacher.id)}
+                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl h-7 w-7 sm:h-8 sm:w-8 p-0 touch-feedback"
+                              title="Hariri Mwalimu / Edit Teacher"
+                            >
+                              <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            </Button>
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleAssignSubject(teacher.id)}
                               className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl h-7 w-7 sm:h-8 sm:w-8 p-0 touch-feedback"
-                              title="Assign Subject"
+                              title="Pangia Somo / Assign Subject"
                             >
                               <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             </Button>
@@ -718,7 +723,7 @@ export default function TeachersPage() {
                               size="sm"
                               onClick={() => handleViewStudents(teacher.id)}
                               className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl h-7 w-7 sm:h-8 sm:w-8 p-0 touch-feedback"
-                              title="View Students"
+                              title="Tazama Wanafunzi / View Students"
                             >
                               <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             </Button>
@@ -727,7 +732,7 @@ export default function TeachersPage() {
                               size="sm"
                               onClick={() => handleDeleteTeacher(teacher.id)}
                               className="text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl h-7 w-7 sm:h-8 sm:w-8 p-0 touch-feedback"
-                              title="Delete"
+                              title="Futa Mwalimu / Delete"
                             >
                               <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             </Button>
@@ -742,7 +747,6 @@ export default function TeachersPage() {
           </CardContent>
         </MobileCard>
 
-        {/* Info Boxes */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-3 sm:p-4 animate-slideIn" style={{ animationDelay: "100ms" }}>
             <div className="flex items-start gap-2 sm:gap-3">
@@ -776,24 +780,23 @@ export default function TeachersPage() {
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-xl p-3 sm:p-4 animate-slideIn" style={{ animationDelay: "300ms" }}>
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-3 sm:p-4 animate-slideIn" style={{ animationDelay: "300ms" }}>
             <div className="flex items-start gap-2 sm:gap-3">
               <div className="flex-shrink-0 mt-0.5">
-                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-emerald-100 flex items-center justify-center">
-                  <BadgeCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-600" />
+                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600" />
                 </div>
               </div>
               <div>
-                <p className="font-medium text-emerald-800 text-xs sm:text-sm">✅ Manage Teachers</p>
-                <p className="text-[10px] sm:text-xs text-emerald-600/80 mt-0.5">
-                  View and manage all teachers in your school
+                <p className="font-medium text-blue-800 text-xs sm:text-sm">✏️ Hariri Mwalimu</p>
+                <p className="text-[10px] sm:text-xs text-blue-600/80 mt-0.5">
+                  Edit teacher information and details
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Footer */}
         <div className="text-center text-[10px] sm:text-xs text-gray-400 py-3 sm:py-4 border-t border-gray-100 animate-fadeIn" style={{ animationDelay: "400ms" }}>
           <p className="font-medium text-blue-600">© 2026 MASI FAST RESULTS • Teachers Management</p>
           <p className="mt-0.5 flex flex-wrap items-center justify-center gap-2">
@@ -806,7 +809,6 @@ export default function TeachersPage() {
         </div>
       </div>
 
-      {/* Custom Animations */}
       <style jsx global>{`
         @keyframes fadeIn {
           from {

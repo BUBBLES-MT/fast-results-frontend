@@ -453,6 +453,7 @@ export default function UsimamiziWaWalimuPage() {
     router.push(`/primary/teachers/${teacherId}/assign`);
   };
 
+  // 🔥🔥🔥 HANDLE EDIT TEACHER - MPYA! 🔥🔥🔥
   const handleEditTeacher = (teacherId: number) => {
     router.push(`/primary/teachers/edit/${teacherId}`);
   };
@@ -591,7 +592,7 @@ export default function UsimamiziWaWalimuPage() {
                     <TableHead className="text-xs sm:text-sm hidden md:table-cell">Barua Pepe</TableHead>
                     <TableHead className="text-xs sm:text-sm hidden lg:table-cell">Jukumu</TableHead>
                     <TableHead className="text-xs sm:text-sm hidden xl:table-cell">Hali</TableHead>
-                    <TableHead className="text-center text-xs sm:text-sm w-20 sm:w-28">Vitendo</TableHead>
+                    <TableHead className="text-center text-xs sm:text-sm w-24 sm:w-32">Vitendo</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -670,7 +671,18 @@ export default function UsimamiziWaWalimuPage() {
                           </span>
                         </TableCell>
                         <TableCell className="text-center">
+                          {/* 🔥🔥🔥 VITENDO VILIVYOBORESHA - NA BUTTON MPYA! 🔥🔥🔥 */}
                           <div className="flex justify-center gap-1">
+                            {/* 🔥 BUTTON YA KUHARIRI - MPYA! */}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditTeacher(teacher.id)}
+                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl h-7 w-7 sm:h-8 sm:w-8 p-0 touch-feedback"
+                              title="Hariri Mwalimu"
+                            >
+                              <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            </Button>
                             <Button
                               variant="ghost"
                               size="sm"
@@ -743,17 +755,17 @@ export default function UsimamiziWaWalimuPage() {
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100 rounded-xl p-3 sm:p-4 animate-slideIn" style={{ animationDelay: "300ms" }}>
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-3 sm:p-4 animate-slideIn" style={{ animationDelay: "300ms" }}>
             <div className="flex items-start gap-2 sm:gap-3">
               <div className="flex-shrink-0 mt-0.5">
-                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-purple-100 flex items-center justify-center">
-                  <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-600" />
+                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600" />
                 </div>
               </div>
               <div>
-                <p className="font-medium text-purple-800 text-xs sm:text-sm">👁️ Tazama Wanafunzi</p>
-                <p className="text-[10px] sm:text-xs text-purple-600/80 mt-0.5">
-                  Tazama wanafunzi wa mwalimu aliyechaguliwa
+                <p className="font-medium text-blue-800 text-xs sm:text-sm">✏️ Hariri Mwalimu</p>
+                <p className="text-[10px] sm:text-xs text-blue-600/80 mt-0.5">
+                  Badilisha taarifa za mwalimu aliyechaguliwa
                 </p>
               </div>
             </div>
