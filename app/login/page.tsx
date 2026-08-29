@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,12 +59,83 @@ import {
   TrendingUp,
   Star,
   Rocket,
+  ChevronLeft,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+// ============================================================
+// 🔥 TYPING EFFECT - WORDS TO DISPLAY
+// ============================================================
+const TYPING_WORDS = [
+  "📊 Fast & Accurate Results",
+  "🏆 Excellence in Education",
+  "📈 Track Student Performance",
+  "👨‍🏫 Empowering Teachers",
+  "🎓 Shaping Future Leaders",
+  "📚 Quality Education Management",
+  "⭐ Your Success Starts Here",
+  "💡 Innovative Learning Platform",
+  "🚀 Transforming Education",
+  "🌍 Building Better Futures",
+];
+
+// ============================================================
+// 🔥 TYPING EFFECT COMPONENT
+// ============================================================
+function TypingEffect() {
+  const [text, setText] = useState("");
+  const [wordIndex, setWordIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isWaiting, setIsWaiting] = useState(false);
+
+  useEffect(() => {
+    const currentWord = TYPING_WORDS[wordIndex];
+    
+    const timer = setTimeout(() => {
+      if (isWaiting) {
+        setIsWaiting(false);
+        return;
+      }
+      
+      if (!isDeleting) {
+        // Typing
+        if (text.length < currentWord.length) {
+          setText(currentWord.substring(0, text.length + 1));
+        } else {
+          // Done typing, wait then delete
+          setIsWaiting(true);
+          setTimeout(() => {
+            setIsDeleting(true);
+          }, 2000);
+        }
+      } else {
+        // Deleting
+        if (text.length > 0) {
+          setText(currentWord.substring(0, text.length - 1));
+        } else {
+          setIsDeleting(false);
+          setWordIndex((prev) => (prev + 1) % TYPING_WORDS.length);
+        }
+      }
+    }, isDeleting ? 50 : 100);
+
+    return () => clearTimeout(timer);
+  }, [text, wordIndex, isDeleting, isWaiting]);
+
+  return (
+    <div className="h-8 sm:h-10 md:h-12 flex items-center justify-center">
+      <span className="text-sm sm:text-base md:text-lg font-medium text-sky-600">
+        {text}
+        <span className="inline-block w-0.5 h-4 sm:h-5 md:h-6 ml-0.5 bg-sky-500 animate-pulse" />
+      </span>
+    </div>
+  );
+}
 
 // ============================================================
 // 🔥 CONSTANTS
 // ============================================================
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const SESSION_TIMEOUT_MINUTES = 15;
 
 // ============================================================
@@ -134,10 +205,12 @@ const deleteCookie = (name: string) => {
 };
 
 // ============================================================
-// 🔥 MAIN COMPONENT
+// 🔥 AUTH CONTENT COMPONENT (With Suspense for useSearchParams)
 // ============================================================
-export default function LoginPage() {
+
+function AuthContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState("login");
   
   // Login state
@@ -184,6 +257,15 @@ export default function LoginPage() {
     !selectedSchoolLevel || role.school_level === selectedSchoolLevel
   );
 
+  // Check for payment success param
+  useEffect(() => {
+    const paymentStatus = searchParams.get("payment");
+    if (paymentStatus === "success") {
+      setLoginSuccess("✅ Payment successful! Please login to continue.");
+      setTimeout(() => setLoginSuccess(""), 5000);
+    }
+  }, [searchParams]);
+
   // ============================================================
   // 🔥 USE EFFECT
   // ============================================================
@@ -216,7 +298,7 @@ export default function LoginPage() {
     
     const fetchSchools = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/api/v1/schools`);
+        const response = await axios.get(`${API_BASE}/api/v1/schools`);
         setSchools(response.data);
         setFilteredSchools(response.data);
         console.log("🏫 Schools loaded:", response.data.length);
@@ -256,7 +338,6 @@ export default function LoginPage() {
       }, 1000);
       return () => clearTimeout(timer);
     } else if (showExpiredDialog && redirectCountdown === 0) {
-      // 🔥 REDIRECT TO PAYMENT PAGE!
       if (expiredSchool && expiredSchool.id) {
         console.log("🚀 Auto-redirecting to payment for school:", expiredSchool.id);
         router.push(`/payment?school_id=${expiredSchool.id}`);
@@ -297,7 +378,7 @@ export default function LoginPage() {
     setLoginSuccess("");
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
+      const response = await fetch(`${API_BASE}/api/v1/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -305,7 +386,6 @@ export default function LoginPage() {
 
       const data = await response.json();
 
-      // ✅ CHECK IF SUBSCRIPTION EXPIRED (402 Payment Required)
       if (response.status === 402) {
         const detail = data.detail;
         
@@ -419,7 +499,7 @@ export default function LoginPage() {
 
   const fetchUserSchool = async (token: string): Promise<number | null> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
+      const response = await fetch(`${API_BASE}/api/v1/auth/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
@@ -430,9 +510,6 @@ export default function LoginPage() {
     return null;
   };
 
-  // ============================================================
-  // 🔥 GO TO PAYMENT PAGE
-  // ============================================================
   const goToPayment = () => {
     console.log("🔍 goToPayment called");
     console.log("🔍 expiredSchool:", expiredSchool);
@@ -448,9 +525,6 @@ export default function LoginPage() {
     }
   };
 
-  // ============================================================
-  // 🔥 FORGOT PASSWORD
-  // ============================================================
   const handleForgotPassword = async () => {
     if (!forgotEmail) {
       setForgotError("Please enter your email address");
@@ -462,7 +536,7 @@ export default function LoginPage() {
     setForgotSuccess("");
     
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/auth/forgot-password`, {
+      const response = await fetch(`${API_BASE}/api/v1/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail }),
@@ -487,9 +561,6 @@ export default function LoginPage() {
     }
   };
 
-  // ============================================================
-  // 🔥 REGISTER
-  // ============================================================
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setRegisterLoading(true);
@@ -513,7 +584,7 @@ export default function LoginPage() {
     }
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/v1/auth/register`, {
+      const response = await axios.post(`${API_BASE}/api/v1/auth/register`, {
         name: registerData.name,
         username: registerData.username,
         email: registerData.email,
@@ -612,9 +683,6 @@ export default function LoginPage() {
     }
   };
 
-  // ============================================================
-  // 🔥 HELPERS
-  // ============================================================
   const getSchoolTypeLabel = (type: string) => {
     switch (type) {
       case "primary": return "🏫 Msingi";
@@ -633,35 +701,53 @@ export default function LoginPage() {
   // 🔥 RENDER
   // ============================================================
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-100 via-blue-100 to-indigo-100 p-6 relative overflow-hidden">
-      {/* Decorative Elements */}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-100 via-blue-100 to-indigo-100 p-4 md:p-6 lg:p-8 relative overflow-hidden">
+      {/* Decorative Elements - Responsive */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-sky-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000" />
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-indigo-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000" />
+        <div className="absolute -top-40 -right-40 w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96 bg-sky-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob" />
+        <div className="absolute -bottom-40 -left-40 w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000" />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96 bg-indigo-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000" />
+        
+        {/* Floating Icons - Hidden on mobile */}
+        <div className="absolute top-10 left-10 text-sky-200/20 animate-float hidden lg:block">
+          <GraduationCap className="h-16 w-16 lg:h-20 lg:w-20" />
+        </div>
+        <div className="absolute bottom-10 right-10 text-blue-200/20 animate-float animation-delay-3000 hidden lg:block">
+          <School className="h-20 w-20 lg:h-24 lg:w-24" />
+        </div>
       </div>
 
-      <Card className="w-full max-w-lg shadow-2xl border-0 bg-white/80 backdrop-blur-xl relative z-10 animate-fadeIn rounded-2xl">
-        <CardHeader className="text-center">
-          <div className="mx-auto bg-gradient-to-r from-sky-500 to-blue-600 p-3 rounded-2xl w-20 h-20 flex items-center justify-center mb-4 shadow-lg shadow-blue-500/30">
-            <School className="h-10 w-10 text-white" />
+      {/* Main Card - Responsive Size */}
+      <Card className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl shadow-2xl border-0 bg-white/90 backdrop-blur-xl relative z-10 animate-fadeIn rounded-2xl overflow-hidden">
+        {/* Top Gradient Bar */}
+        <div className="h-1.5 w-full bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500" />
+        
+        <CardHeader className="text-center pt-5 sm:pt-6 md:pt-8 lg:pt-10 px-4 sm:px-6 md:px-8">
+          <div className="mx-auto bg-gradient-to-r from-sky-500 to-blue-600 p-2.5 sm:p-3 rounded-2xl w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 flex items-center justify-center mb-3 sm:mb-4 shadow-lg shadow-blue-500/30 animate-pulse-soft">
+            <School className="h-7 w-7 sm:h-8 sm:w-8 md:h-10 md:w-10 text-white" />
           </div>
-          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-sky-700 to-blue-700 bg-clip-text text-transparent">
+          <CardTitle className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-sky-700 to-blue-700 bg-clip-text text-transparent">
             MASI FAST RESULTS
           </CardTitle>
-          <CardDescription className="text-gray-600">
+          
+          {/* 🔥🔥🔥 TYPING EFFECT - HERE! 🔥🔥🔥 */}
+          <div className="mt-2 sm:mt-3">
+            <TypingEffect />
+          </div>
+          
+          <CardDescription className="text-gray-600 text-xs sm:text-sm md:text-base mt-2">
             Fast and Accurate Results
           </CardDescription>
         </CardHeader>
 
         {loginSuccess && (
-          <div className="mx-6 mb-4 bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 px-4 py-4 rounded-lg shadow-md">
-            <div className="flex items-start gap-3">
-              <CheckCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+          <div className="mx-3 sm:mx-4 md:mx-6 mb-3 sm:mb-4 bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg shadow-md">
+            <div className="flex items-start gap-2 sm:gap-3">
+              <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 flex-shrink-0 text-emerald-500" />
               <div>
-                <p className="font-medium text-base whitespace-pre-line">{loginSuccess}</p>
+                <p className="font-medium text-xs sm:text-sm md:text-base whitespace-pre-line">{loginSuccess}</p>
                 {!loginSuccess.includes("🎉") && !loginSuccess.includes("Karibu") && !loginSuccess.includes("Welcome") && (
-                  <p className="text-xs text-emerald-600 mt-2">⏳ Utapata taarifa baada ya idhini. Asante!</p>
+                  <p className="text-[10px] sm:text-xs text-emerald-600 mt-1">⏳ Utapata taarifa baada ya idhini. Asante!</p>
                 )}
               </div>
             </div>
@@ -669,180 +755,197 @@ export default function LoginPage() {
         )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-sky-100/50 rounded-xl p-1 mx-auto w-[90%]">
+          <TabsList className="grid w-full grid-cols-2 bg-sky-100/50 rounded-xl p-1 mx-auto w-[92%] sm:w-[90%] md:w-[88%]">
             <TabsTrigger 
               value="login" 
-              className="gap-2 data-[state=active]:bg-white data-[state=active]:text-sky-700 data-[state=active]:shadow-md rounded-lg transition-all"
+              className="gap-1 sm:gap-2 text-xs sm:text-sm md:text-base data-[state=active]:bg-white data-[state=active]:text-sky-700 data-[state=active]:shadow-md rounded-lg transition-all py-1.5 sm:py-2"
             >
-              <LogIn className="h-4 w-4" />
-              Login
+              <LogIn className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">Login</span>
+              <span className="xs:hidden">Login</span>
             </TabsTrigger>
             <TabsTrigger 
               value="register" 
-              className="gap-2 data-[state=active]:bg-white data-[state=active]:text-sky-700 data-[state=active]:shadow-md rounded-lg transition-all"
+              className="gap-1 sm:gap-2 text-xs sm:text-sm md:text-base data-[state=active]:bg-white data-[state=active]:text-sky-700 data-[state=active]:shadow-md rounded-lg transition-all py-1.5 sm:py-2"
             >
-              <UserPlus className="h-4 w-4" />
-              Register
+              <UserPlus className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">Register</span>
+              <span className="xs:hidden">Register</span>
             </TabsTrigger>
           </TabsList>
 
-          {/* Login Tab */}
+          {/* Login Tab - Responsive */}
           <TabsContent value="login">
-            <CardContent className="pt-6">
-              <form onSubmit={handleLogin} className="space-y-6">
-                <div className="space-y-2">
-                  <Label className="text-gray-700 font-medium">Username</Label>
+            <CardContent className="pt-3 sm:pt-4 md:pt-6 px-3 sm:px-4 md:px-6">
+              <form onSubmit={handleLogin} className="space-y-3 sm:space-y-4 md:space-y-5">
+                <div className="space-y-1 sm:space-y-2">
+                  <Label className="text-gray-700 font-medium text-xs sm:text-sm md:text-base">Username</Label>
                   <Input
                     type="text"
                     placeholder="Enter your username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
+                    className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 h-9 sm:h-10 md:h-11 text-sm md:text-base"
                     required
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-gray-700 font-medium">Password</Label>
+                <div className="space-y-1 sm:space-y-2">
+                  <Label className="text-gray-700 font-medium text-xs sm:text-sm md:text-base">Password</Label>
                   <div className="relative">
                     <Input
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 pr-10"
+                      className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 pr-10 h-9 sm:h-10 md:h-11 text-sm md:text-base"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 touch-feedback p-1"
                     >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showPassword ? <EyeOff className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
                     </button>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between">
+                {/* 🔥 Small Round Checkbox - Fixed! */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="remember"
                       checked={rememberMe}
                       onCheckedChange={(checked) => setRememberMe(checked === true)}
-                      className="border-gray-300 data-[state=checked]:bg-sky-600 data-[state=checked]:border-sky-600"
+                      className={cn(
+                        "border-gray-300",
+                        "data-[state=checked]:bg-sky-600",
+                        "data-[state=checked]:border-sky-600",
+                        "h-3.5 w-3.5",
+                        "rounded-full",
+                        "cursor-pointer",
+                        "transition-all duration-200",
+                        "focus:ring-2 focus:ring-sky-400 focus:ring-offset-2",
+                        "flex-shrink-0",
+                        "[&>span]:h-2.5 [&>span]:w-2.5"
+                      )}
                     />
-                    <Label htmlFor="remember" className="text-sm text-gray-600 cursor-pointer">
+                    <Label 
+                      htmlFor="remember" 
+                      className="text-xs sm:text-sm text-gray-600 cursor-pointer select-none"
+                    >
                       Remember me
                     </Label>
                   </div>
                   <button
                     type="button"
                     onClick={() => setForgotPasswordOpen(true)}
-                    className="text-sm text-sky-600 hover:text-sky-700 hover:underline transition-all"
+                    className="text-xs sm:text-sm text-sky-600 hover:text-sky-700 hover:underline transition-all touch-feedback"
                   >
                     Forgot password?
                   </button>
                 </div>
 
                 {loginError && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4" />
-                    {loginError}
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg flex items-center gap-2 text-xs sm:text-sm">
+                    <AlertCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                    <span className="break-words">{loginError}</span>
                   </div>
                 )}
                 
                 <Button 
                   type="submit" 
-                  className="w-full bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-200" 
+                  className="w-full bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-200 h-10 sm:h-11 md:h-12 text-sm md:text-base touch-feedback" 
                   disabled={loginLoading}
                 >
                   {loginLoading ? (
-                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Logging in...</>
+                    <><Loader2 className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" /> Logging in...</>
                   ) : (
-                    <>Login <ArrowRight className="ml-2 h-4 w-4" /></>
+                    <>Login <ArrowRight className="ml-2 h-3.5 w-3.5 sm:h-4 sm:w-4" /></>
                   )}
                 </Button>
               </form>
             </CardContent>
           </TabsContent>
 
-          {/* Register Tab */}
+          {/* Register Tab - Responsive */}
           <TabsContent value="register">
-            <CardContent className="pt-6">
-              <form onSubmit={handleRegister} className="space-y-4">
+            <CardContent className="pt-3 sm:pt-4 md:pt-6 px-3 sm:px-4 md:px-6">
+              <form onSubmit={handleRegister} className="space-y-2.5 sm:space-y-3 md:space-y-4">
                 {registerSuccess && (
-                  <div className="bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 px-4 py-4 rounded-lg shadow-md">
-                    <div className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                  <div className="bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg shadow-md">
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="font-medium text-base whitespace-pre-line">{registerSuccess}</p>
+                        <p className="font-medium text-xs sm:text-sm md:text-base whitespace-pre-line">{registerSuccess}</p>
                         {!registerSuccess.includes("🎉") && !registerSuccess.includes("Karibu") && !registerSuccess.includes("Welcome") && (
-                          <p className="text-xs text-emerald-600 mt-2">⏳ Utapata arifa baada ya idhini. Asante!</p>
+                          <p className="text-[10px] sm:text-xs text-emerald-600 mt-1">⏳ Utapata arifa baada ya idhini. Asante!</p>
                         )}
                       </div>
                     </div>
                   </div>
                 )}
                 
-                <div className="space-y-2">
-                  <Label className="text-gray-700 font-medium">Full Name *</Label>
+                <div className="space-y-1 sm:space-y-2">
+                  <Label className="text-gray-700 font-medium text-xs sm:text-sm md:text-base">Full Name *</Label>
                   <Input
                     placeholder="Enter your full name"
                     value={registerData.name}
                     onChange={(e) => setRegisterData({ ...registerData, name: e.target.value })}
-                    className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500"
+                    className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500 h-9 sm:h-10 md:h-11 text-sm md:text-base"
                     required
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-gray-700 font-medium">Username *</Label>
+                <div className="space-y-1 sm:space-y-2">
+                  <Label className="text-gray-700 font-medium text-xs sm:text-sm md:text-base">Username *</Label>
                   <Input
                     placeholder="Choose a username"
                     value={registerData.username}
                     onChange={(e) => setRegisterData({ ...registerData, username: e.target.value })}
-                    className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500"
+                    className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500 h-9 sm:h-10 md:h-11 text-sm md:text-base"
                     required
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-gray-700 font-medium">Email *</Label>
+                <div className="space-y-1 sm:space-y-2">
+                  <Label className="text-gray-700 font-medium text-xs sm:text-sm md:text-base">Email *</Label>
                   <Input
                     type="email"
                     placeholder="Enter your email"
                     value={registerData.email}
                     onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
-                    className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500"
+                    className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500 h-9 sm:h-10 md:h-11 text-sm md:text-base"
                     required
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-gray-700 font-medium flex items-center gap-2">
-                    <Filter className="h-4 w-4 text-sky-600" />
+                <div className="space-y-1 sm:space-y-2">
+                  <Label className="text-gray-700 font-medium flex items-center gap-2 text-xs sm:text-sm md:text-base">
+                    <Filter className="h-3 w-3 sm:h-4 sm:w-4 text-sky-600" />
                     Chagua Aina ya Shule
                   </Label>
                   <Select
                     value={selectedSchoolLevel || "all"}
                     onValueChange={(value) => setSelectedSchoolLevel(value === "all" ? "" : value)}
                   >
-                    <SelectTrigger className="bg-white border-gray-200">
+                    <SelectTrigger className="bg-white border-gray-200 h-9 sm:h-10 md:h-11 text-sm md:text-base">
                       <SelectValue placeholder="Chagua aina ya shule" />
                     </SelectTrigger>
                     <SelectContent className="bg-white border-gray-200 shadow-lg">
                       {schoolLevelOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value} className="hover:bg-sky-50">
+                        <SelectItem key={option.value} value={option.value} className="hover:bg-sky-50 text-sm">
                           {option.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-gray-500">Chagua aina ya shule ili kuona shule zinazolingana</p>
+                  <p className="text-[10px] sm:text-xs text-gray-500">Chagua aina ya shule ili kuona shule zinazolingana</p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-gray-700 font-medium flex items-center gap-2">
-                    <Search className="h-4 w-4 text-sky-600" />
+                <div className="space-y-1 sm:space-y-2">
+                  <Label className="text-gray-700 font-medium flex items-center gap-2 text-xs sm:text-sm md:text-base">
+                    <Search className="h-3 w-3 sm:h-4 sm:w-4 text-sky-600" />
                     Tafuta Shule Yako
                   </Label>
                   <div className="relative">
@@ -850,44 +953,44 @@ export default function LoginPage() {
                       placeholder="Andika jina la shule yako..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500 pr-10"
+                      className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500 pr-10 h-9 sm:h-10 md:h-11 text-sm md:text-base"
                     />
                     {searchQuery && (
                       <button
                         type="button"
                         onClick={clearSearch}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 touch-feedback"
                       >
-                        <X className="h-4 w-4" />
+                        <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </button>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-[10px] sm:text-xs text-gray-500">
                     {filteredSchools.length > 0 
                       ? `${filteredSchools.length} shule zimepatikana` 
                       : "Hakuna shule inayolingana na utafutaji wako"}
                   </p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-gray-700 font-medium">Select Your School *</Label>
+                <div className="space-y-1 sm:space-y-2">
+                  <Label className="text-gray-700 font-medium text-xs sm:text-sm md:text-base">Select Your School *</Label>
                   <Select
                     value={registerData.school_id}
                     onValueChange={handleSchoolChange}
                   >
-                    <SelectTrigger className="bg-white border-gray-200">
+                    <SelectTrigger className="bg-white border-gray-200 h-9 sm:h-10 md:h-11 text-sm md:text-base">
                       <SelectValue placeholder="Choose your school" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200 shadow-lg max-h-60 overflow-y-auto">
+                    <SelectContent className="bg-white border-gray-200 shadow-lg max-h-48 sm:max-h-60 overflow-y-auto">
                       {filteredSchools.length === 0 ? (
-                        <SelectItem value="none" disabled>
+                        <SelectItem value="none" disabled className="text-sm">
                           {searchQuery ? "Hakuna shule inayolingana" : "No schools available"}
                         </SelectItem>
                       ) : (
                         filteredSchools.map((school) => (
-                          <SelectItem key={school.id} value={school.id.toString()} className="hover:bg-sky-50">
-                            <div className="flex items-center gap-2">
-                              <span>{school.name}</span>
+                          <SelectItem key={school.id} value={school.id.toString()} className="hover:bg-sky-50 text-sm">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-0 sm:gap-2">
+                              <span className="text-sm">{school.name}</span>
                               <span className="text-xs text-gray-400">- {getSchoolTypeLabel(school.school_type)}</span>
                             </div>
                           </SelectItem>
@@ -895,89 +998,89 @@ export default function LoginPage() {
                       )}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-[10px] sm:text-xs text-gray-500">
                     {filteredSchools.length > 0 
                       ? `${filteredSchools.length} shule zilizopatikana. Chagua shule yako.`
                       : "Badilisha aina ya shule au tafuta kwa jina"}
                   </p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-gray-700 font-medium">Your Role *</Label>
+                <div className="space-y-1 sm:space-y-2">
+                  <Label className="text-gray-700 font-medium text-xs sm:text-sm md:text-base">Your Role *</Label>
                   <Select
                     value={registerData.role}
                     onValueChange={(value) => setRegisterData({ ...registerData, role: value })}
                   >
-                    <SelectTrigger className="bg-white border-gray-200">
+                    <SelectTrigger className="bg-white border-gray-200 h-9 sm:h-10 md:h-11 text-sm md:text-base">
                       <SelectValue placeholder="Select your role" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200 shadow-lg">
+                    <SelectContent className="bg-white border-gray-200 shadow-lg max-h-48 sm:max-h-60 overflow-y-auto">
                       {filteredRoles.length === 0 ? (
-                        <SelectItem value="none" disabled>Please select a school first</SelectItem>
+                        <SelectItem value="none" disabled className="text-sm">Please select a school first</SelectItem>
                       ) : (
                         filteredRoles.map((role) => (
-                          <SelectItem key={role.value} value={role.value} className="hover:bg-sky-50">
+                          <SelectItem key={role.value} value={role.value} className="hover:bg-sky-50 text-sm">
                             {role.label}
                           </SelectItem>
                         ))
                       )}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-sky-600">{getRoleDescription(registerData.role)}</p>
-                  <p className="text-xs text-amber-600">⚠️ Headmaster and Academic roles require admin approval.</p>
+                  <p className="text-[10px] sm:text-xs text-sky-600">{getRoleDescription(registerData.role)}</p>
+                  <p className="text-[10px] sm:text-xs text-amber-600">⚠️ Headmaster and Academic roles require admin approval.</p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-gray-700 font-medium">Phone Number</Label>
+                <div className="space-y-1 sm:space-y-2">
+                  <Label className="text-gray-700 font-medium text-xs sm:text-sm md:text-base">Phone Number</Label>
                   <Input
                     placeholder="e.g., 0712345678"
                     value={registerData.phone1}
                     onChange={(e) => setRegisterData({ ...registerData, phone1: e.target.value })}
-                    className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500"
+                    className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500 h-9 sm:h-10 md:h-11 text-sm md:text-base"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-gray-700 font-medium">Password *</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 md:gap-4">
+                  <div className="space-y-1 sm:space-y-2">
+                    <Label className="text-gray-700 font-medium text-xs sm:text-sm md:text-base">Password *</Label>
                     <Input
                       type="password"
-                      placeholder="Create password (min 6 chars)"
+                      placeholder="Min 6 chars"
                       value={registerData.password}
                       onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
-                      className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500"
+                      className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500 h-9 sm:h-10 md:h-11 text-sm md:text-base"
                       required
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-gray-700 font-medium">Confirm Password *</Label>
+                  <div className="space-y-1 sm:space-y-2">
+                    <Label className="text-gray-700 font-medium text-xs sm:text-sm md:text-base">Confirm Password *</Label>
                     <Input
                       type="password"
                       placeholder="Confirm password"
                       value={registerData.confirmPassword}
                       onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
-                      className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500"
+                      className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500 h-9 sm:h-10 md:h-11 text-sm md:text-base"
                       required
                     />
                   </div>
                 </div>
 
                 {registerError && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4" />
-                    {registerError}
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg flex items-center gap-2 text-xs sm:text-sm">
+                    <AlertCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                    <span className="break-words">{registerError}</span>
                   </div>
                 )}
 
                 <Button 
                   type="submit" 
-                  className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-lg hover:shadow-xl transition-all duration-200" 
+                  className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-lg hover:shadow-xl transition-all duration-200 h-10 sm:h-11 md:h-12 text-sm md:text-base touch-feedback" 
                   disabled={registerLoading}
                 >
                   {registerLoading ? (
-                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Registering...</>
+                    <><Loader2 className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" /> Registering...</>
                   ) : (
-                    <>Register <ArrowRight className="ml-2 h-4 w-4" /></>
+                    <>Register <ArrowRight className="ml-2 h-3.5 w-3.5 sm:h-4 sm:w-4" /></>
                   )}
                 </Button>
               </form>
@@ -985,38 +1088,35 @@ export default function LoginPage() {
           </TabsContent>
         </Tabs>
 
-        <CardFooter className="flex flex-col gap-2 justify-center border-t border-gray-200 pt-6">
-          <p className="text-xs text-gray-500 text-center">By registering, you agree to our terms and conditions.</p>
-          <div className="flex items-center gap-2 text-xs text-gray-400 text-center">
+        <CardFooter className="flex flex-col gap-2 border-t border-gray-200/60 pt-3 sm:pt-4 md:pt-5 px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 md:pb-5">
+          <p className="text-[10px] sm:text-xs text-gray-500 text-center">By registering, you agree to our terms and conditions.</p>
+          <div className="flex items-center gap-2 text-[10px] sm:text-xs text-gray-400 text-center flex-wrap justify-center">
             <Shield className="h-3 w-3" /> Superadmin access is by invitation only.
             <Crown className="h-3 w-3 text-amber-500" />
           </div>
         </CardFooter>
       </Card>
 
-      {/* ============================================================
-          🔥 SUBSCRIPTION EXPIRED DIALOG - PRO MAX VERSION
-          ============================================================ */}
+      {/* SUBSCRIPTION EXPIRED DIALOG - Responsive */}
       <Dialog open={showExpiredDialog} onOpenChange={setShowExpiredDialog}>
-        <DialogContent className="sm:max-w-md bg-white rounded-2xl border-0 shadow-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-md md:max-w-lg bg-white rounded-2xl border-0 shadow-2xl p-4 sm:p-6">
           <DialogHeader>
-            <div className="mx-auto bg-amber-100 p-3 rounded-full w-16 h-16 flex items-center justify-center animate-pulse">
-              <CreditCard className="h-8 w-8 text-amber-600" />
+            <div className="mx-auto bg-amber-100 p-3 rounded-full w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center animate-pulse">
+              <CreditCard className="h-7 w-7 sm:h-8 sm:w-8 text-amber-600" />
             </div>
-            <DialogTitle className="text-xl text-center text-amber-800">
+            <DialogTitle className="text-lg sm:text-xl text-center text-amber-800">
               ⚠️ Subscription Expired
             </DialogTitle>
-            <DialogDescription className="text-center text-gray-600">
+            <DialogDescription className="text-center text-gray-600 text-xs sm:text-sm">
               The subscription for <strong className="text-amber-700">{expiredSchool?.name || "Shule yako"}</strong> has expired.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            {/* Expired Date */}
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <div className="space-y-2.5 sm:space-y-3 md:space-y-4 py-3 sm:py-4">
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 sm:p-4">
               <div className="flex items-center gap-3">
-                <Calendar className="h-5 w-5 text-amber-600" />
+                <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600 flex-shrink-0" />
                 <div>
-                  <p className="text-sm text-gray-700">
+                  <p className="text-xs sm:text-sm text-gray-700">
                     <strong>Expired on:</strong>{" "}
                     {expiredSchool?.expiry_date 
                       ? new Date(expiredSchool.expiry_date).toLocaleDateString()
@@ -1026,20 +1126,17 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Main Message */}
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-sm text-red-700 font-semibold">🔒 Account Suspended</p>
-              <p className="text-sm text-red-600 mt-1">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4">
+              <p className="text-xs sm:text-sm text-red-700 font-semibold">🔒 Account Suspended</p>
+              <p className="text-xs sm:text-sm text-red-600 mt-1">
                 Your school account has been temporarily suspended due to an expired subscription.
-                To restore full access to all features and services, please renew your subscription
-                immediately.
+                To restore full access, please renew your subscription immediately.
               </p>
             </div>
 
-            {/* What to Do */}
-            <div className="bg-sky-50 border border-sky-200 rounded-lg p-4">
-              <p className="text-sm text-sky-700 font-semibold">📋 What You Need to Do:</p>
-              <ul className="text-sm text-sky-600 mt-2 space-y-2 list-disc list-inside">
+            <div className="bg-sky-50 border border-sky-200 rounded-lg p-3 sm:p-4">
+              <p className="text-xs sm:text-sm text-sky-700 font-semibold">📋 What You Need to Do:</p>
+              <ul className="text-xs sm:text-sm text-sky-600 mt-2 space-y-1 list-disc list-inside">
                 <li>Contact your school management to process payment</li>
                 <li>Choose a subscription plan that fits your needs</li>
                 <li>Complete the renewal process</li>
@@ -1047,32 +1144,17 @@ export default function LoginPage() {
               </ul>
             </div>
 
-            {/* Benefits of Renewing */}
-            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-              <p className="text-sm text-emerald-700 font-semibold">✅ Benefits of Renewing:</p>
-              <ul className="text-sm text-emerald-600 mt-2 space-y-1 list-disc list-inside">
-                <li>Full access to student management system</li>
-                <li>Teacher and staff management</li>
-                <li>Academic records and reports</li>
-                <li>Parent and student communication</li>
-                <li>24/7 technical support</li>
-              </ul>
-            </div>
-
-            {/* Support */}
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <p className="text-sm text-gray-700 font-semibold">📞 Need Help?</p>
-              <div className="text-sm text-gray-600 mt-2 space-y-1">
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4">
+              <p className="text-xs sm:text-sm text-gray-700 font-semibold">📞 Need Help?</p>
+              <div className="text-xs sm:text-sm text-gray-600 mt-2 space-y-0.5">
                 <p>📧 Email: <strong>support@masifastresults.com</strong></p>
                 <p>📞 Phone: <strong>+255 700 000 000</strong></p>
-                <p>🕐 Hours: Monday - Friday, 8:00 AM - 6:00 PM (EAT)</p>
               </div>
             </div>
 
-            {/* Countdown */}
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg p-4 text-center">
-              <p className="text-sm text-amber-700">
-                <strong>⏳ Redirecting to payment page in {redirectCountdown} seconds...</strong>
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg p-3 sm:p-4 text-center">
+              <p className="text-xs sm:text-sm text-amber-700">
+                <strong>⏳ Redirecting to payment in {redirectCountdown}s...</strong>
               </p>
               <div className="w-full bg-gray-200 rounded-full h-2 mt-2 overflow-hidden">
                 <div 
@@ -1082,12 +1164,12 @@ export default function LoginPage() {
               </div>
             </div>
           </div>
-          <DialogFooter className="flex flex-col gap-2 sm:flex-row">
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
             <Button 
               onClick={goToPayment}
-              className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-lg hover:shadow-xl transition-all duration-200"
+              className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-lg touch-feedback"
             >
-              <CreditCard className="h-4 w-4 mr-2" />
+              <CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
               Renew Now
             </Button>
             <Button 
@@ -1101,45 +1183,45 @@ export default function LoginPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Forgot Password Dialog */}
+      {/* Forgot Password Dialog - Responsive */}
       <Dialog open={forgotPasswordOpen} onOpenChange={setForgotPasswordOpen}>
-        <DialogContent className="sm:max-w-md bg-white rounded-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-md bg-white rounded-2xl p-4 sm:p-6">
           <DialogHeader>
-            <DialogTitle className="text-xl flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-sky-600" />
+            <DialogTitle className="text-lg sm:text-xl flex items-center gap-2">
+              <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-sky-600" />
               Reset Password
             </DialogTitle>
-            <DialogDescription>Enter your email address and we'll send you a link to reset your password.</DialogDescription>
+            <DialogDescription className="text-xs sm:text-sm">Enter your email address and we'll send you a link to reset your password.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
             <div className="space-y-2">
-              <Label className="text-gray-700">Email Address</Label>
+              <Label className="text-gray-700 text-xs sm:text-sm">Email Address</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
                 <Input
                   type="email"
                   placeholder="Enter your registered email"
                   value={forgotEmail}
                   onChange={(e) => setForgotEmail(e.target.value)}
-                  className="pl-10 bg-white border-gray-200 focus:ring-2 focus:ring-sky-500"
+                  className="pl-9 sm:pl-10 bg-white border-gray-200 focus:ring-2 focus:ring-sky-500 h-9 sm:h-10 md:h-11 text-sm"
                 />
               </div>
             </div>
             {forgotError && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-lg flex items-center gap-2">
-                <AlertCircle className="h-4 w-4" /> {forgotError}
+              <div className="bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 rounded-lg flex items-center gap-2 text-xs sm:text-sm">
+                <AlertCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> {forgotError}
               </div>
             )}
             {forgotSuccess && (
-              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-2 rounded-lg flex items-center gap-2">
-                <CheckCircle className="h-4 w-4" /> {forgotSuccess}
+              <div className="bg-green-50 border border-green-200 text-green-700 px-3 sm:px-4 py-2 rounded-lg flex items-center gap-2 text-xs sm:text-sm">
+                <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> {forgotSuccess}
               </div>
             )}
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
             <Button variant="outline" onClick={() => setForgotPasswordOpen(false)}>Cancel</Button>
-            <Button onClick={handleForgotPassword} disabled={forgotLoading} className="bg-gradient-to-r from-sky-600 to-blue-600">
-              {forgotLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+            <Button onClick={handleForgotPassword} disabled={forgotLoading} className="bg-gradient-to-r from-sky-600 to-blue-600 touch-feedback">
+              {forgotLoading ? <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin mr-2" /> : <Send className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />}
               Send Reset Link
             </Button>
           </DialogFooter>
@@ -1157,16 +1239,70 @@ export default function LoginPage() {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+        }
         @keyframes pulse {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.5; }
         }
+        @keyframes pulse-soft {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+        }
         .animate-blob { animation: blob 7s infinite; }
         .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
+        .animate-float { animation: float 6s ease-in-out infinite; }
         .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        .animate-pulse-soft { animation: pulse-soft 3s ease-in-out infinite; }
+        .touch-feedback {
+          @apply active:scale-95 transition-transform duration-150;
+        }
         .animation-delay-2000 { animation-delay: 2s; }
+        .animation-delay-3000 { animation-delay: 3s; }
         .animation-delay-4000 { animation-delay: 4s; }
+        
+        /* 🔥 RESPONSIVE BREAKPOINTS */
+        @media (max-width: 400px) {
+          .xs\\:inline { display: inline !important; }
+          .xs\\:hidden { display: none !important; }
+        }
+        @media (min-width: 401px) {
+          .xs\\:inline { display: none !important; }
+          .xs\\:hidden { display: inline !important; }
+        }
+        @media (min-width: 640px) {
+          .sm\\:inline { display: inline !important; }
+        }
+        @media (min-width: 768px) {
+          .md\\:inline { display: inline !important; }
+        }
+        @media (min-width: 1024px) {
+          .lg\\:inline { display: inline !important; }
+        }
       `}</style>
     </div>
+  );
+}
+
+// ============================================================
+// 🔥 MAIN PAGE - WITH SUSPENSE BOUNDARY
+// ============================================================
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-100 via-blue-100 to-indigo-100">
+          <div className="text-center">
+            <Loader2 className="h-10 w-10 sm:h-12 sm:w-12 animate-spin text-sky-600 mx-auto" />
+            <p className="text-gray-600 mt-4 text-sm">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <AuthContent />
+    </Suspense>
   );
 }
