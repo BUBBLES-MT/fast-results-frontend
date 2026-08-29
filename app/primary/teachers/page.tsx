@@ -450,7 +450,7 @@ export default function UsimamiziWaWalimuPage() {
   };
 
   const handleAssignSubject = (teacherId: number) => {
-    router.push(`/primary/teachers/assign/${teacherId}`);
+    router.push(`/primary/teachers/${teacherId}/assign`);
   };
 
   const handleEditTeacher = (teacherId: number) => {
