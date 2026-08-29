@@ -60,6 +60,11 @@ import {
   Star,
   Rocket,
   ChevronLeft,
+  Key,
+  Lock,
+  Unlock,
+  Check,
+  XCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -67,6 +72,7 @@ import { cn } from "@/lib/utils";
 // 🔥 TYPING EFFECT - WORDS TO DISPLAY
 // ============================================================
 const TYPING_WORDS = [
+  "👇 Bonyeza kitufe cha BLUE hapa chini kuona matokeo ya mtoto wako",
   "📊 Fast & Accurate Results",
   "🏆 Excellence in Education",
   "📈 Track Student Performance",
@@ -98,18 +104,15 @@ function TypingEffect() {
       }
       
       if (!isDeleting) {
-        // Typing
         if (text.length < currentWord.length) {
           setText(currentWord.substring(0, text.length + 1));
         } else {
-          // Done typing, wait then delete
           setIsWaiting(true);
           setTimeout(() => {
             setIsDeleting(true);
           }, 2000);
         }
       } else {
-        // Deleting
         if (text.length > 0) {
           setText(currentWord.substring(0, text.length - 1));
         } else {
@@ -128,6 +131,240 @@ function TypingEffect() {
         {text}
         <span className="inline-block w-0.5 h-4 sm:h-5 md:h-6 ml-0.5 bg-sky-500 animate-pulse" />
       </span>
+    </div>
+  );
+}
+
+// ============================================================
+// 🔥 PASSWORD STRENGTH COMPONENT
+// ============================================================
+interface PasswordStrengthProps {
+  password: string;
+  confirmPassword: string;
+  showPassword: boolean;
+  setShowPassword: (show: boolean) => void;
+  onPasswordChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onConfirmChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
+
+function PasswordSection({ 
+  password, 
+  confirmPassword, 
+  showPassword, 
+  setShowPassword,
+  onPasswordChange,
+  onConfirmChange
+}: PasswordStrengthProps) {
+  
+  // Check password requirements
+  const hasMinLength = password.length >= 6;
+  const hasUpperCase = /[A-Z]/.test(password);
+  const hasLowerCase = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+  
+  const requirementsMet = [hasMinLength, hasUpperCase, hasLowerCase, hasNumber, hasSpecialChar];
+  const requirementsCount = requirementsMet.filter(Boolean).length;
+  
+  // Calculate strength
+  const getStrength = () => {
+    if (password.length === 0) return { label: "", color: "", width: 0 };
+    if (requirementsCount <= 2) return { label: "Weak", color: "bg-red-500", width: 20 };
+    if (requirementsCount === 3) return { label: "Fair", color: "bg-orange-500", width: 40 };
+    if (requirementsCount === 4) return { label: "Good", color: "bg-blue-500", width: 70 };
+    return { label: "Strong 💪", color: "bg-emerald-500", width: 100 };
+  };
+  
+  const strength = getStrength();
+  
+  // Check if passwords match (only when both have text)
+  const passwordsMatch = password.length > 0 && confirmPassword.length > 0 && password === confirmPassword;
+  const passwordsDontMatch = confirmPassword.length > 0 && password !== confirmPassword;
+  
+  return (
+    <div className="space-y-3">
+      {/* Password Field */}
+      <div className="space-y-1">
+        <Label className="text-gray-700 font-medium text-xs sm:text-sm md:text-base flex items-center gap-2">
+          <Key className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-sky-600" />
+          Password *
+        </Label>
+        <div className="relative">
+          <Input
+            type={showPassword ? "text" : "password"}
+            placeholder="Min 6 chars with letters, numbers & special chars"
+            value={password}
+            onChange={onPasswordChange}
+            className={cn(
+              "bg-white border-gray-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 pr-10 h-9 sm:h-10 md:h-11 text-sm md:text-base",
+              password.length > 0 && "border-sky-300"
+            )}
+            required
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 touch-feedback p-1"
+          >
+            {showPassword ? (
+              <EyeOff className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            ) : (
+              <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            )}
+          </button>
+        </div>
+      </div>
+      
+      {/* Password Strength Bar */}
+      {password.length > 0 && (
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] sm:text-xs text-gray-500">Password Strength</span>
+            <span className={cn(
+              "text-[10px] sm:text-xs font-semibold",
+              strength.label === "Weak" && "text-red-500",
+              strength.label === "Fair" && "text-orange-500",
+              strength.label === "Good" && "text-blue-500",
+              strength.label === "Strong 💪" && "text-emerald-500"
+            )}>
+              {strength.label}
+            </span>
+          </div>
+          <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+            <div 
+              className={cn(
+                "h-full rounded-full transition-all duration-500",
+                strength.color
+              )}
+              style={{ width: `${strength.width}%` }}
+            />
+          </div>
+        </div>
+      )}
+      
+      {/* Password Requirements Checklist */}
+      <div className="grid grid-cols-2 gap-1">
+        <div className="flex items-center gap-1.5">
+          {hasMinLength ? (
+            <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-500" />
+          ) : (
+            <XCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-300" />
+          )}
+          <span className={cn(
+            "text-[9px] sm:text-[10px]",
+            hasMinLength ? "text-emerald-600" : "text-gray-400"
+          )}>
+            Min 6 chars
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          {hasUpperCase ? (
+            <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-500" />
+          ) : (
+            <XCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-300" />
+          )}
+          <span className={cn(
+            "text-[9px] sm:text-[10px]",
+            hasUpperCase ? "text-emerald-600" : "text-gray-400"
+          )}>
+            Uppercase (A-Z)
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          {hasLowerCase ? (
+            <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-500" />
+          ) : (
+            <XCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-300" />
+          )}
+          <span className={cn(
+            "text-[9px] sm:text-[10px]",
+            hasLowerCase ? "text-emerald-600" : "text-gray-400"
+          )}>
+            Lowercase (a-z)
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          {hasNumber ? (
+            <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-500" />
+          ) : (
+            <XCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-300" />
+          )}
+          <span className={cn(
+            "text-[9px] sm:text-[10px]",
+            hasNumber ? "text-emerald-600" : "text-gray-400"
+          )}>
+            Number (0-9)
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5 col-span-2">
+          {hasSpecialChar ? (
+            <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-500" />
+          ) : (
+            <XCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-300" />
+          )}
+          <span className={cn(
+            "text-[9px] sm:text-[10px]",
+            hasSpecialChar ? "text-emerald-600" : "text-gray-400"
+          )}>
+            Special char (!@#$%^&* etc.)
+          </span>
+        </div>
+      </div>
+      
+      {/* Confirm Password Field */}
+      <div className="space-y-1">
+        <Label className="text-gray-700 font-medium text-xs sm:text-sm md:text-base flex items-center gap-2">
+          <Lock className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-sky-600" />
+          Confirm Password *
+        </Label>
+        <div className="relative">
+          <Input
+            type={showPassword ? "text" : "password"}
+            placeholder="Retype your password"
+            value={confirmPassword}
+            onChange={onConfirmChange}
+            className={cn(
+              "bg-white border-gray-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 pr-10 h-9 sm:h-10 md:h-11 text-sm md:text-base",
+              // 🔥 GREEN if passwords match, RED if they don't!
+              passwordsMatch && "border-emerald-500 ring-2 ring-emerald-200",
+              passwordsDontMatch && "border-red-500 ring-2 ring-red-200"
+            )}
+            required
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 touch-feedback p-1"
+          >
+            {showPassword ? (
+              <EyeOff className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            ) : (
+              <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            )}
+          </button>
+        </div>
+        
+        {/* 🔥 Match Status Indicator */}
+        {confirmPassword.length > 0 && (
+          <div className="flex items-center gap-1.5 mt-1">
+            {passwordsMatch ? (
+              <>
+                <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-500" />
+                <span className="text-[10px] sm:text-xs text-emerald-600 font-medium">
+                  ✅ Passwords match!
+                </span>
+              </>
+            ) : passwordsDontMatch ? (
+              <>
+                <XCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-red-500" />
+                <span className="text-[10px] sm:text-xs text-red-600 font-medium">
+                  ❌ Passwords do not match!
+                </span>
+              </>
+            ) : null}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -252,6 +489,7 @@ function AuthContent() {
   const [registerError, setRegisterError] = useState("");
   const [registerSuccess, setRegisterSuccess] = useState("");
   const [registerLoading, setRegisterLoading] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   
   const filteredRoles = AVAILABLE_ROLES.filter(role => 
     !selectedSchoolLevel || role.school_level === selectedSchoolLevel
@@ -366,6 +604,17 @@ function AuthContent() {
       return ROLE_MAPPING[role];
     }
     return role;
+  };
+
+  // ============================================================
+  // 🔥 PASSWORD HANDLERS
+  // ============================================================
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setRegisterData({ ...registerData, password: e.target.value });
+  };
+
+  const handleConfirmChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setRegisterData({ ...registerData, confirmPassword: e.target.value });
   };
 
   // ============================================================
@@ -868,7 +1117,7 @@ function AuthContent() {
             </CardContent>
           </TabsContent>
 
-          {/* Register Tab - Responsive */}
+          {/* Register Tab - Responsive WITH NEW PASSWORD SECTION */}
           <TabsContent value="register">
             <CardContent className="pt-3 sm:pt-4 md:pt-6 px-3 sm:px-4 md:px-6">
               <form onSubmit={handleRegister} className="space-y-2.5 sm:space-y-3 md:space-y-4">
@@ -1040,30 +1289,15 @@ function AuthContent() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 md:gap-4">
-                  <div className="space-y-1 sm:space-y-2">
-                    <Label className="text-gray-700 font-medium text-xs sm:text-sm md:text-base">Password *</Label>
-                    <Input
-                      type="password"
-                      placeholder="Min 6 chars"
-                      value={registerData.password}
-                      onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
-                      className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500 h-9 sm:h-10 md:h-11 text-sm md:text-base"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-1 sm:space-y-2">
-                    <Label className="text-gray-700 font-medium text-xs sm:text-sm md:text-base">Confirm Password *</Label>
-                    <Input
-                      type="password"
-                      placeholder="Confirm password"
-                      value={registerData.confirmPassword}
-                      onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
-                      className="bg-white border-gray-200 focus:ring-2 focus:ring-sky-500 h-9 sm:h-10 md:h-11 text-sm md:text-base"
-                      required
-                    />
-                  </div>
-                </div>
+                {/* 🔥🔥🔥 NEW PASSWORD SECTION WITH STRENGTH INDICATOR 🔥🔥🔥 */}
+                <PasswordSection
+                  password={registerData.password}
+                  confirmPassword={registerData.confirmPassword}
+                  showPassword={showRegisterPassword}
+                  setShowPassword={setShowRegisterPassword}
+                  onPasswordChange={handlePasswordChange}
+                  onConfirmChange={handleConfirmChange}
+                />
 
                 {registerError && (
                   <div className="bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg flex items-center gap-2 text-xs sm:text-sm">
