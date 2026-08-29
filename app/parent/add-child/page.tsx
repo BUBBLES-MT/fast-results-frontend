@@ -1,4 +1,5 @@
 // app/parent/add-child/page.tsx
+// 🔥 VERSION 2.0 - PRO MAX WITH MOBILE FIRST DESIGN!
 
 "use client";
 
@@ -42,11 +43,22 @@ import {
   Sparkles,
   Heart,
   Zap,
+  Home,
+  User,
+  Calendar,
+  Star,
+  Shield,
+  Crown,
+  Award,
+  TrendingUp,
+  Clock,
+  Rocket,
+  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ============================================================
-// 🔥 API BASE - Works EVERYWHERE (Local + Live!)
+// 🔥 API BASE
 // ============================================================
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -92,7 +104,67 @@ interface Child {
 }
 
 // ============================================================
-// 🔥 MOBILE LAYOUT COMPONENTS
+// 🔥 TYPING EFFECT WORDS
+// ============================================================
+const TYPING_WORDS = [
+  "👨‍👧‍👦 Connect with your child",
+  "📚 Track academic progress",
+  "🏆 Celebrate achievements",
+  "❤️ Stay involved in education",
+];
+
+// ============================================================
+// 🔥 TYPING EFFECT COMPONENT
+// ============================================================
+function TypingEffect() {
+  const [text, setText] = useState("");
+  const [wordIndex, setWordIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isWaiting, setIsWaiting] = useState(false);
+
+  useEffect(() => {
+    const currentWord = TYPING_WORDS[wordIndex];
+    
+    const timer = setTimeout(() => {
+      if (isWaiting) {
+        setIsWaiting(false);
+        return;
+      }
+      
+      if (!isDeleting) {
+        if (text.length < currentWord.length) {
+          setText(currentWord.substring(0, text.length + 1));
+        } else {
+          setIsWaiting(true);
+          setTimeout(() => {
+            setIsDeleting(true);
+          }, 2000);
+        }
+      } else {
+        if (text.length > 0) {
+          setText(currentWord.substring(0, text.length - 1));
+        } else {
+          setIsDeleting(false);
+          setWordIndex((prev) => (prev + 1) % TYPING_WORDS.length);
+        }
+      }
+    }, isDeleting ? 50 : 100);
+
+    return () => clearTimeout(timer);
+  }, [text, wordIndex, isDeleting, isWaiting]);
+
+  return (
+    <div className="h-6 sm:h-8 flex items-center justify-center">
+      <span className="text-sm sm:text-base md:text-lg font-medium text-white/95">
+        {text}
+        <span className="inline-block w-0.5 h-4 sm:h-5 md:h-6 ml-0.5 bg-white animate-pulse" />
+      </span>
+    </div>
+  );
+}
+
+// ============================================================
+// 🔥 COMPONENTS
 // ============================================================
 
 function MobileBackButton() {
@@ -148,6 +220,43 @@ function MobileAlert({
           <X className="h-4 w-4" />
         </button>
       )}
+    </div>
+  );
+}
+
+// ============================================================
+// 🔥 STAT CARD
+// ============================================================
+
+function StatCard({ label, value, icon: Icon, color = "sky" }: { label: string; value: string | number; icon: any; color?: "sky" | "emerald" | "purple" | "amber" | "rose" }) {
+  const colors = {
+    sky: "from-sky-500 to-blue-500",
+    emerald: "from-emerald-500 to-teal-500",
+    purple: "from-purple-500 to-pink-500",
+    amber: "from-amber-500 to-orange-500",
+    rose: "from-rose-500 to-pink-500",
+  };
+
+  return (
+    <div className={cn(
+      "rounded-2xl p-4 text-white shadow-xl",
+      "bg-gradient-to-r",
+      colors[color]
+    )}>
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-[10px] sm:text-xs font-medium text-white/80 uppercase tracking-wider">
+            {label}
+          </p>
+          <p className="text-2xl sm:text-3xl font-bold mt-0.5">{value}</p>
+        </div>
+        <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
+          <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+        </div>
+      </div>
+      <div className="mt-2 h-0.5 w-full bg-white/20 rounded-full overflow-hidden">
+        <div className="h-full w-1/2 bg-white/40 rounded-full animate-pulse-soft" />
+      </div>
     </div>
   );
 }
@@ -216,11 +325,9 @@ export default function ParentAddChildPage() {
 
   const fetchSchools = async () => {
     try {
-      console.log("🔄 Fetching schools...");
       const response = await fetch(`${API_BASE}/api/v1/schools`);
       if (response.ok) {
         const data = await response.json();
-        console.log("📚 Schools received:", data.length);
         setSchools(data);
       }
     } catch (err) {
@@ -230,28 +337,15 @@ export default function ParentAddChildPage() {
 
   const fetchClassesDirect = async (schoolId: string) => {
     if (!schoolId) return;
-
-    console.log("🔄 Fetching classes for school:", schoolId);
-
     try {
-      const endpoint = `${API_BASE}/api/v1/parents/public/classes?school_id=${schoolId}`;
-      const response = await fetch(endpoint);
-
+      const response = await fetch(`${API_BASE}/api/v1/parents/public/classes?school_id=${schoolId}`);
       if (response.ok) {
         const data = await response.json();
-        console.log("📚 Classes received:", data.length);
-
-        if (data && data.length > 0) {
-          setClasses(data);
-        } else {
-          setClasses([]);
-        }
-
+        setClasses(data);
         setSelectedClass("");
         setSelectedStream("all");
         setStreams([]);
       } else {
-        console.error("Failed to fetch classes:", response.status);
         setClasses([]);
       }
     } catch (err) {
@@ -262,18 +356,12 @@ export default function ParentAddChildPage() {
 
   const fetchStreams = async (classId: string) => {
     if (!classId) return;
-
     try {
-      console.log("🔄 Fetching streams for class:", classId);
-      const endpoint = `${API_BASE}/api/v1/parents/public/streams?class_id=${classId}`;
-
-      const response = await fetch(endpoint);
+      const response = await fetch(`${API_BASE}/api/v1/parents/public/streams?class_id=${classId}`);
       if (response.ok) {
         const data = await response.json();
-        console.log("📚 Streams received:", data.length);
         setStreams(data);
       } else {
-        console.error("Failed to fetch streams:", response.status);
         setStreams([]);
       }
     } catch (err) {
@@ -286,7 +374,6 @@ export default function ParentAddChildPage() {
   // 🔥 HANDLERS
   // ============================================================
   const handleSchoolLevelChange = (value: string) => {
-    console.log("🔄 School level changed to:", value);
     setSchoolLevel(value);
     setSelectedSchoolId("");
     setClasses([]);
@@ -299,8 +386,6 @@ export default function ParentAddChildPage() {
   };
 
   const handleSchoolChange = (value: string) => {
-    console.log("🔄 School changed to:", value);
-
     setSelectedSchoolId(value);
     setClasses([]);
     setStreams([]);
@@ -309,14 +394,12 @@ export default function ParentAddChildPage() {
     setSearchResults([]);
     setShowResults(false);
     setSelectedStudent(null);
-
     if (value) {
       fetchClassesDirect(value);
     }
   };
 
   const handleClassChange = (value: string) => {
-    console.log("🔄 Class changed to:", value);
     setSelectedClass(value);
     setSelectedStream("all");
     setStreams([]);
@@ -330,7 +413,6 @@ export default function ParentAddChildPage() {
       setError("Tafadhali chagua shule");
       return;
     }
-
     if (!selectedClass) {
       setError("Tafadhali chagua darasa");
       return;
@@ -346,7 +428,6 @@ export default function ParentAddChildPage() {
         school_id: selectedSchoolId,
         class_id: selectedClass,
       });
-
       if (selectedStream && selectedStream !== "all") {
         params.append("stream_id", selectedStream);
       }
@@ -354,37 +435,27 @@ export default function ParentAddChildPage() {
         params.append("roll_number", rollNumber);
       }
 
-      const endpoint = `${API_BASE}/api/v1/parents/public/students?${params.toString()}`;
-      console.log("📡 Searching students:", endpoint);
-
-      const response = await fetch(endpoint);
+      const response = await fetch(`${API_BASE}/api/v1/parents/public/students?${params.toString()}`);
       if (response.ok) {
         const data = await response.json();
-        console.log("📚 Students found:", data.length);
         setSearchResults(data);
         setShowResults(true);
-
         if (data.length === 1) {
           setSelectedStudent(data[0]);
-          setSuccess(
-            `✅ Mwanafunzi ${data[0].name} amechaguliwa kiotomatiki! Tafadhali chagua uhusiano na ubonyeze Ongeza.`
-          );
+          setSuccess(`✅ Mwanafunzi ${data[0].name} amechaguliwa kiotomatiki!`);
           setTimeout(() => setSuccess(""), 4000);
         } else if (data.length === 0) {
-          setError("Hakuna wanafunzi waliopatikana kwa vigezo ulivyochagua");
+          setError("Hakuna wanafunzi waliopatikana");
           setSelectedStudent(null);
         } else {
           setSelectedStudent(null);
-          setError("");
         }
       } else {
         const errorData = await response.json();
         setError(errorData.detail || "Imeshindwa kutafuta wanafunzi");
-        setSelectedStudent(null);
       }
     } catch (err: any) {
       setError(err.message || "Imeshindwa kutafuta wanafunzi");
-      setSelectedStudent(null);
     } finally {
       setSearching(false);
     }
@@ -464,19 +535,18 @@ export default function ParentAddChildPage() {
 
   const getRelationshipLabel = (rel: string) => {
     switch (rel) {
-      case "Biological":
-        return "Mzazi wa Kawaida";
-      case "Guardian":
-        return "Mlezi";
-      case "Step Parent":
-        return "Mzazi wa Kambo";
-      default:
-        return "Mwingine";
+      case "Biological": return "Mzazi wa Kawaida";
+      case "Guardian": return "Mlezi";
+      case "Step Parent": return "Mzazi wa Kambo";
+      default: return "Mwingine";
     }
   };
 
   const filteredSchools = schools.filter((s) => s.school_level === schoolLevel);
 
+  // ============================================================
+  // 🔥 LOADING STATE
+  // ============================================================
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-100 via-teal-100 to-cyan-100">
@@ -485,85 +555,110 @@ export default function ParentAddChildPage() {
             <div className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 blur-xl opacity-50 animate-pulse" />
             <Loader2 className="h-12 w-12 animate-spin text-emerald-600 relative z-10" />
           </div>
-          <p className="text-gray-600 mt-4 text-sm sm:text-base">Inapakia...</p>
+          <p className="text-gray-600 mt-4 text-sm sm:text-base animate-pulse">Loading...</p>
         </div>
       </div>
     );
   }
 
+  // ============================================================
+  // 🔥 RENDER
+  // ============================================================
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-100 via-teal-100 to-cyan-100 p-3 sm:p-4 md:p-6">
-      <div className="max-w-5xl mx-auto animate-fadeIn">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4 sm:mb-6 flex-wrap gap-3">
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Link href="/parent/dashboard">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1 sm:gap-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50 rounded-xl h-9 sm:h-10 text-xs sm:text-sm touch-feedback"
-              >
-                <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span className="hidden xs:inline">Rudi Dashboard</span>
-                <span className="inline xs:hidden">Rudi</span>
-              </Button>
-            </Link>
-            <div className="flex items-center gap-2">
-              <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-1.5 sm:p-2 rounded-xl shadow-lg shadow-emerald-500/30">
-                <UserPlus className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-              </div>
-              <h1 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent">
-                Ongeza Mtoto
-              </h1>
-            </div>
-          </div>
-          <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-[10px] sm:text-xs">
-            <Heart className="h-3 w-3 mr-1" />
-            {children.length} Watoto
-          </Badge>
+    <div className="min-h-screen bg-gradient-to-br from-emerald-100 via-teal-100 to-cyan-100">
+      {/* Hero Section - PRO MAX! */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-72 h-72 md:w-96 md:h-96 bg-emerald-400/20 rounded-full blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-72 h-72 md:w-96 md:h-96 bg-teal-400/20 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-400/10 rounded-full blur-3xl" />
         </div>
 
+        <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 md:py-14">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-center sm:text-left">
+              <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-white text-xs sm:text-sm font-medium mb-2 sm:mb-3">
+                <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
+                Parent Portal
+              </div>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">
+                Add Your Child
+              </h1>
+              <div className="mt-1">
+                <TypingEffect />
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Badge className="bg-white/20 backdrop-blur-sm text-white border-0 px-3 py-1.5 text-sm">
+                <Heart className="h-3.5 w-3.5 mr-1.5" />
+                {children.length} Children
+              </Badge>
+              <Link href="/parent/dashboard">
+                <Button className="bg-white/20 backdrop-blur-sm text-white border-2 border-white/30 hover:bg-white/30 gap-2 rounded-xl h-9 sm:h-10 text-sm touch-feedback">
+                  <Home className="h-4 w-4" />
+                  <span className="hidden sm:inline">Dashboard</span>
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-8 animate-fadeIn">
         {/* Messages */}
         {success && <MobileAlert type="success" message={success} onClose={() => setSuccess("")} />}
         {error && <MobileAlert type="error" message={error} onClose={() => setError("")} />}
 
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <StatCard label="Watoto" value={children.length} icon={Heart} color="emerald" />
+          <StatCard label="Schools" value={schools.length} icon={School} color="sky" />
+          <StatCard label="Search Results" value={searchResults.length} icon={Search} color="purple" />
+          <StatCard label="Status" value={children.length > 0 ? "✅ Active" : "📝 Pending"} icon={CheckCircle} color="amber" />
+        </div>
+
         {/* Children List */}
         {children.length > 0 && (
-          <Card className="mb-4 sm:mb-6 shadow-lg border-0 bg-white/90 backdrop-blur-xl rounded-2xl overflow-hidden">
+          <Card className="mb-4 sm:mb-6 shadow-xl border-0 bg-white/95 backdrop-blur-xl rounded-2xl overflow-hidden">
             <div className="h-1 w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500" />
-            <CardHeader className="p-3 sm:p-6 bg-gradient-to-r from-emerald-50 to-teal-50">
+            <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-emerald-50 to-teal-50">
               <CardTitle className="flex items-center gap-2 text-base sm:text-xl text-emerald-800">
                 <Heart className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" />
-                <span className="text-sm sm:text-base">Watoto Waliopo ({children.length})</span>
+                <span className="text-sm sm:text-base">My Children ({children.length})</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-3 sm:p-6 pt-0">
+            <CardContent className="p-4 sm:p-6 pt-0">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                 {children.map((child) => (
                   <div
                     key={child.id}
-                    className="flex items-center justify-between p-2 sm:p-3 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl hover:shadow-md transition-all duration-300 border border-emerald-100"
+                    className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl hover:shadow-md transition-all duration-300 border border-emerald-100 group"
                   >
-                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                      <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-xs sm:text-sm flex-shrink-0 shadow-md">
+                    <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                      <div className="h-9 w-9 sm:h-12 sm:w-12 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-sm sm:text-lg flex-shrink-0 shadow-md">
                         {child.student_name.charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <p className="font-medium text-xs sm:text-sm text-gray-800 truncate">
+                        <p className="font-semibold text-sm sm:text-base text-gray-800 truncate">
                           {child.student_name}
                         </p>
-                        <p className="text-[10px] sm:text-xs text-gray-500 truncate">
-                          {child.class_name} {child.stream_name} • {getRelationshipLabel(child.relationship)}
-                        </p>
+                        <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-[10px] sm:text-xs text-gray-500">
+                          <span className="bg-gray-100 px-1.5 py-0.5 rounded-full">{child.class_name}</span>
+                          {child.stream_name && <span className="bg-gray-100 px-1.5 py-0.5 rounded-full">{child.stream_name}</span>}
+                          <span className="bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">
+                            {getRelationshipLabel(child.relationship)}
+                          </span>
+                        </div>
                       </div>
                     </div>
                     <Button
                       size="sm"
                       variant="destructive"
                       onClick={() => handleRemoveChild(child.id, child.student_name)}
-                      className="flex-shrink-0 rounded-xl h-7 w-7 sm:h-8 sm:w-8 p-0"
+                      className="flex-shrink-0 rounded-xl h-8 w-8 sm:h-9 sm:w-9 p-0 opacity-60 hover:opacity-100 transition-opacity"
                     >
-                      <Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </Button>
                   </div>
                 ))}
@@ -573,65 +668,52 @@ export default function ParentAddChildPage() {
         )}
 
         {/* Search Form */}
-        <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-xl rounded-2xl overflow-hidden">
+        <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-xl rounded-2xl overflow-hidden">
           <div className="h-1 w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
-          <CardHeader className="p-3 sm:p-6 bg-gradient-to-r from-blue-50 to-purple-50">
+          <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-blue-50 to-purple-50">
             <CardTitle className="flex items-center gap-2 text-base sm:text-xl">
               <Search className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
-              <span className="text-sm sm:text-base text-gray-800">Tafuta Mtoto Wako</span>
+              <span className="text-sm sm:text-base text-gray-800">Find Your Child</span>
             </CardTitle>
             <CardDescription className="text-xs sm:text-sm text-gray-600">
-              Chagua aina ya shule, kisha chagua shule na darasa la mtoto wako kumtafuta na kumuongeza kwenye
-              akaunti yako
+              Select school type, then choose your child's school and class to find and add them
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-3 sm:p-6 pt-0">
+          <CardContent className="p-4 sm:p-6 pt-0">
             <div className="space-y-4">
               {/* School Level */}
               <div className="space-y-1.5 sm:space-y-2">
                 <Label className="text-gray-700 font-medium flex items-center gap-2 text-sm">
                   <School className="h-4 w-4 text-emerald-600" />
-                  Aina ya Shule *
+                  School Type *
                 </Label>
                 <Select value={schoolLevel} onValueChange={handleSchoolLevelChange}>
                   <SelectTrigger className="bg-white border-emerald-200 focus:ring-2 focus:ring-emerald-500 rounded-xl h-10 sm:h-11 text-sm">
-                    <SelectValue placeholder="Chagua aina ya shule" />
+                    <SelectValue placeholder="Select school type" />
                   </SelectTrigger>
                   <SelectContent className="bg-white border-emerald-200 shadow-lg rounded-xl">
-                    <SelectItem value="primary">🏫 Shule ya Msingi (Primary)</SelectItem>
-                    <SelectItem value="secondary">📚 Shule ya Sekondari (Secondary)</SelectItem>
+                    <SelectItem value="primary">🏫 Primary School</SelectItem>
+                    <SelectItem value="secondary">📚 Secondary School</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-[10px] sm:text-xs text-gray-400">
-                  Umechagua:{" "}
-                  <span className="font-medium text-emerald-600">{getSchoolLevelLabel(schoolLevel)}</span>
-                </p>
               </div>
 
-              {/* School Select */}
+              {/* School */}
               <div className="space-y-1.5 sm:space-y-2">
                 <Label className="text-gray-700 font-medium flex items-center gap-2 text-sm">
                   <Building2 className="h-4 w-4 text-blue-600" />
-                  Chagua Shule *
+                  Select School *
                 </Label>
                 <Select value={selectedSchoolId} onValueChange={handleSchoolChange}>
-                  <SelectTrigger
-                    className={cn(
-                      "bg-white border-blue-200 focus:ring-2 focus:ring-blue-500 rounded-xl h-10 sm:h-11 text-sm",
-                      filteredSchools.length === 0 && "opacity-50"
-                    )}
-                  >
-                    <SelectValue
-                      placeholder={
-                        filteredSchools.length === 0 ? "Hakuna shule za aina hii" : "Chagua shule"
-                      }
-                    />
+                  <SelectTrigger className={cn(
+                    "bg-white border-blue-200 focus:ring-2 focus:ring-blue-500 rounded-xl h-10 sm:h-11 text-sm",
+                    filteredSchools.length === 0 && "opacity-50"
+                  )}>
+                    <SelectValue placeholder={filteredSchools.length === 0 ? "No schools available" : "Select school"} />
                   </SelectTrigger>
                   <SelectContent className="bg-white border-blue-200 shadow-lg rounded-xl max-h-60">
                     {filteredSchools.length === 0 ? (
-                      <SelectItem value="none" disabled>
-                        Hakuna shule zilizopatikana
-                      </SelectItem>
+                      <SelectItem value="none" disabled>No schools found</SelectItem>
                     ) : (
                       filteredSchools.map((school) => (
                         <SelectItem key={school.id} value={school.id.toString()}>
@@ -641,46 +723,26 @@ export default function ParentAddChildPage() {
                     )}
                   </SelectContent>
                 </Select>
-                {selectedSchoolId && (
-                  <p className="text-[10px] sm:text-xs text-emerald-600 flex items-center gap-1">
-                    <CheckCircle className="h-3 w-3" />
-                    Shule imechaguliwa:{" "}
-                    <span className="font-medium">
-                      {schools.find((s) => s.id.toString() === selectedSchoolId)?.name}
-                    </span>
-                  </p>
-                )}
               </div>
 
               {/* Class, Stream, Roll Number */}
               {selectedSchoolId && (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                  {/* Class */}
                   <div className="space-y-1.5 sm:space-y-2">
                     <Label className="text-gray-700 font-medium flex items-center gap-2 text-sm">
                       <GraduationCap className="h-4 w-4 text-purple-600" />
-                      Darasa *
+                      Class *
                     </Label>
-                    <Select
-                      value={selectedClass}
-                      onValueChange={handleClassChange}
-                      disabled={classes.length === 0}
-                    >
-                      <SelectTrigger
-                        className={cn(
-                          "bg-white border-purple-200 focus:ring-2 focus:ring-purple-500 rounded-xl h-10 sm:h-11 text-sm",
-                          classes.length === 0 && "opacity-50"
-                        )}
-                      >
-                        <SelectValue
-                          placeholder={classes.length === 0 ? "Hakuna madarasa" : "Chagua darasa"}
-                        />
+                    <Select value={selectedClass} onValueChange={handleClassChange} disabled={classes.length === 0}>
+                      <SelectTrigger className={cn(
+                        "bg-white border-purple-200 focus:ring-2 focus:ring-purple-500 rounded-xl h-10 sm:h-11 text-sm",
+                        classes.length === 0 && "opacity-50"
+                      )}>
+                        <SelectValue placeholder={classes.length === 0 ? "No classes" : "Select class"} />
                       </SelectTrigger>
                       <SelectContent className="bg-white border-purple-200 shadow-lg rounded-xl max-h-60">
                         {classes.length === 0 ? (
-                          <SelectItem value="none" disabled>
-                            Hakuna madarasa
-                          </SelectItem>
+                          <SelectItem value="none" disabled>No classes available</SelectItem>
                         ) : (
                           classes.map((cls) => (
                             <SelectItem key={cls.id} value={cls.id.toString()}>
@@ -690,35 +752,22 @@ export default function ParentAddChildPage() {
                         )}
                       </SelectContent>
                     </Select>
-                    {classes.length > 0 && (
-                      <p className="text-[10px] sm:text-xs text-emerald-600 flex items-center gap-1">
-                        <CheckCircle className="h-3 w-3" />
-                        Madarasa {classes.length} yamepatikana
-                      </p>
-                    )}
                   </div>
 
-                  {/* Stream */}
                   <div className="space-y-1.5 sm:space-y-2">
                     <Label className="text-gray-700 font-medium flex items-center gap-2 text-sm">
                       <BookOpen className="h-4 w-4 text-amber-600" />
-                      Mkondo (si lazima)
+                      Stream (Optional)
                     </Label>
-                    <Select
-                      value={selectedStream}
-                      onValueChange={setSelectedStream}
-                      disabled={!selectedClass}
-                    >
-                      <SelectTrigger
-                        className={cn(
-                          "bg-white border-amber-200 focus:ring-2 focus:ring-amber-500 rounded-xl h-10 sm:h-11 text-sm",
-                          !selectedClass && "opacity-50"
-                        )}
-                      >
-                        <SelectValue placeholder="Chagua mkondo" />
+                    <Select value={selectedStream} onValueChange={setSelectedStream} disabled={!selectedClass}>
+                      <SelectTrigger className={cn(
+                        "bg-white border-amber-200 focus:ring-2 focus:ring-amber-500 rounded-xl h-10 sm:h-11 text-sm",
+                        !selectedClass && "opacity-50"
+                      )}>
+                        <SelectValue placeholder="All streams" />
                       </SelectTrigger>
                       <SelectContent className="bg-white border-amber-200 shadow-lg rounded-xl max-h-60">
-                        <SelectItem value="all">Mikondo yote</SelectItem>
+                        <SelectItem value="all">All Streams</SelectItem>
                         {streams.map((stream) => (
                           <SelectItem key={stream.id} value={stream.id.toString()}>
                             {stream.name}
@@ -728,14 +777,13 @@ export default function ParentAddChildPage() {
                     </Select>
                   </div>
 
-                  {/* Roll Number */}
                   <div className="space-y-1.5 sm:space-y-2">
                     <Label className="text-gray-700 font-medium flex items-center gap-2 text-sm">
                       <Zap className="h-4 w-4 text-cyan-600" />
-                      Namba (si lazima)
+                      Roll Number (Optional)
                     </Label>
                     <Input
-                      placeholder="Namba ya mtoto"
+                      placeholder="Enter roll number"
                       value={rollNumber}
                       onChange={(e) => setRollNumber(e.target.value)}
                       className="bg-white border-cyan-200 focus:ring-2 focus:ring-cyan-500 rounded-xl h-10 sm:h-11 text-sm"
@@ -755,7 +803,7 @@ export default function ParentAddChildPage() {
                 ) : (
                   <Search className="h-4 w-4 mr-2" />
                 )}
-                Tafuta Wanafunzi
+                Search Students
               </Button>
 
               {/* Search Results */}
@@ -763,19 +811,13 @@ export default function ParentAddChildPage() {
                 <div className="mt-4 sm:mt-6 animate-slideIn">
                   <h3 className="font-semibold text-gray-700 mb-2 sm:mb-3 text-sm sm:text-base flex items-center gap-2">
                     <Users className="h-4 w-4 text-indigo-600" />
-                    Wanafunzi Waliopatikana ({searchResults.length})
+                    Results ({searchResults.length})
                   </h3>
 
                   {searchResults.length > 1 && (
                     <p className="text-[10px] sm:text-xs text-amber-600 mb-3 flex items-center gap-1">
                       <span className="text-base">👆</span>
-                      Bonyeza mwanafunzi mmoja kati ya hawa kuongeza kwenye akaunti yako
-                    </p>
-                  )}
-                  {searchResults.length === 1 && selectedStudent && (
-                    <p className="text-[10px] sm:text-xs text-emerald-600 mb-3 flex items-center gap-1">
-                      <CheckCircle className="h-3 w-3" />
-                      Mwanafunzi amechaguliwa kiotomatiki! Chagua uhusiano na ubonyeze Ongeza.
+                      Select one student to add to your account
                     </p>
                   )}
 
@@ -784,7 +826,7 @@ export default function ParentAddChildPage() {
                       <div
                         key={student.id}
                         className={cn(
-                          "flex items-center justify-between p-2 sm:p-3 rounded-xl border-2 transition-all cursor-pointer touch-feedback",
+                          "flex items-center justify-between p-3 sm:p-4 rounded-xl border-2 transition-all cursor-pointer touch-feedback",
                           selectedStudent?.id === student.id
                             ? "border-emerald-500 bg-emerald-50 shadow-md"
                             : "border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/50"
@@ -794,62 +836,61 @@ export default function ParentAddChildPage() {
                           setError("");
                         }}
                       >
-                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                          <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 flex items-center justify-center text-white font-bold text-xs sm:text-sm flex-shrink-0 shadow-md">
+                        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                          <div className="h-9 w-9 sm:h-12 sm:w-12 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm sm:text-lg flex-shrink-0 shadow-md">
                             {student.name.charAt(0).toUpperCase()}
                           </div>
                           <div className="min-w-0">
-                            <p className="font-medium text-xs sm:text-sm text-gray-800 truncate">
+                            <p className="font-semibold text-sm sm:text-base text-gray-800 truncate">
                               {student.name}
                             </p>
                             <p className="text-[10px] sm:text-xs text-gray-500 truncate">
-                              {student.class_name} {student.stream_name} • Namba:{" "}
-                              {student.roll_number || "-"}
+                              {student.class_name} {student.stream_name} • Roll: {student.roll_number || "-"}
                             </p>
                           </div>
                         </div>
                         {selectedStudent?.id === student.id && (
                           <Badge className="bg-emerald-500 text-white text-[10px] sm:text-xs flex-shrink-0 border-0">
                             <CheckCircle className="h-3 w-3 mr-1" />
-                            Imechaguliwa
+                            Selected
                           </Badge>
                         )}
                       </div>
                     ))}
                   </div>
 
-                  {/* Relationship & Add Button */}
+                  {/* Relationship & Add */}
                   {selectedStudent && (
-                    <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-200 animate-slideIn shadow-md">
-                      <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-                        <div className="flex-1 min-w-[160px] sm:min-w-[200px]">
+                    <div className="mt-4 p-4 sm:p-5 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-200 animate-slideIn shadow-md">
+                      <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
+                        <div className="w-full sm:flex-1">
                           <Label className="text-gray-700 font-medium text-sm flex items-center gap-2">
                             <Heart className="h-4 w-4 text-rose-500" />
-                            Uhusiano
+                            Relationship
                           </Label>
                           <Select value={relationship} onValueChange={setRelationship}>
                             <SelectTrigger className="bg-white border-gray-200 focus:ring-2 focus:ring-emerald-500 rounded-xl h-9 sm:h-10 text-sm">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="bg-white border-gray-200 shadow-lg rounded-xl">
-                              <SelectItem value="Biological">❤️ Mzazi wa Kawaida</SelectItem>
-                              <SelectItem value="Guardian">👨‍👦 Mlezi</SelectItem>
-                              <SelectItem value="Step Parent">👨‍👩‍👦 Mzazi wa Kambo</SelectItem>
-                              <SelectItem value="Other">🤝 Mwingine</SelectItem>
+                              <SelectItem value="Biological">❤️ Biological Parent</SelectItem>
+                              <SelectItem value="Guardian">👨‍👦 Guardian</SelectItem>
+                              <SelectItem value="Step Parent">👨‍👩‍👦 Step Parent</SelectItem>
+                              <SelectItem value="Other">🤝 Other</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         <Button
                           onClick={handleAddChild}
                           disabled={submitting}
-                          className="gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg hover:shadow-xl transition-all rounded-xl h-9 sm:h-10 text-sm flex-1 sm:flex-none touch-feedback"
+                          className="w-full sm:w-auto gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg hover:shadow-xl transition-all rounded-xl h-10 sm:h-11 text-sm touch-feedback"
                         >
                           {submitting ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
                             <Plus className="h-4 w-4" />
                           )}
-                          Ongeza Mtoto
+                          Add Child
                         </Button>
                       </div>
                     </div>
@@ -859,85 +900,47 @@ export default function ParentAddChildPage() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Footer */}
-        <div className="text-center text-[10px] sm:text-xs text-gray-400 py-3 sm:py-4 border-t border-gray-100/50 mt-4 sm:mt-6 animate-fadeIn">
-          <p className="font-medium text-emerald-600">© 2026 MASI FAST RESULTS • Parent Portal</p>
-          <p className="mt-0.5 flex items-center justify-center gap-2">
-            <span>❤️ {children.length} watoto</span>
-            <span>•</span>
-            <span>🏫 {schools.length} shule</span>
-            <span>•</span>
-            <span>🔍 Tafuta mtoto wako</span>
-          </p>
-        </div>
       </div>
 
-      {/* Custom Animations */}
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-4 sm:py-6 mt-4 sm:mt-8">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 text-center">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Heart className="h-4 w-4 text-emerald-400" />
+            <span className="font-bold text-sm sm:text-base text-emerald-400">MASI FAST RESULTS</span>
+          </div>
+          <p className="text-gray-400 text-xs sm:text-sm">Parent Portal • Connect with Your Child</p>
+          <p className="text-gray-600 text-[10px] sm:text-xs mt-2">
+            &copy; {new Date().getFullYear()} MASI FAST RESULTS SYSTEM. All rights reserved.
+          </p>
+        </div>
+      </footer>
+
+      {/* Styles */}
       <style jsx global>{`
         @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
-
         @keyframes slideIn {
-          from {
-            opacity: 0;
-            transform: translateX(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
+          from { opacity: 0; transform: translateX(-20px); }
+          to { opacity: 1; transform: translateX(0); }
         }
-
         @keyframes pulse-soft {
-          0%,
-          100% {
-            transform: scale(1);
-          }
-          50% {
-            transform: scale(1.02);
-          }
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.02); }
         }
-
-        .animate-fadeIn {
-          animation: fadeIn 0.6s ease-out forwards;
-        }
-
-        .animate-slideIn {
-          animation: slideIn 0.4s ease-out forwards;
-        }
-
-        .animate-pulse-soft {
-          animation: pulse-soft 3s ease-in-out infinite;
-        }
-
-        .touch-feedback {
-          @apply active:scale-95 transition-transform duration-150;
-        }
-
+        .animate-fadeIn { animation: fadeIn 0.6s ease-out forwards; }
+        .animate-slideIn { animation: slideIn 0.4s ease-out forwards; }
+        .animate-pulse-soft { animation: pulse-soft 3s ease-in-out infinite; }
+        .touch-feedback { @apply active:scale-95 transition-transform duration-150; }
         @media (max-width: 399px) {
-          .xs\\:inline {
-            display: inline !important;
-          }
-          .xs\\:hidden {
-            display: none !important;
-          }
+          .xs\\:inline { display: inline !important; }
+          .xs\\:hidden { display: none !important; }
         }
         @media (min-width: 400px) {
-          .xs\\:inline {
-            display: none !important;
-          }
-          .xs\\:hidden {
-            display: inline !important;
-          }
+          .xs\\:inline { display: none !important; }
+          .xs\\:hidden { display: inline !important; }
         }
       `}</style>
     </div>

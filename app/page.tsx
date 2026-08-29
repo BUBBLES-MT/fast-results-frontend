@@ -30,39 +30,77 @@ import {
   Rocket,
   Globe,
   Heart,
+  BarChart3,
+  Target,
+  Medal,
+  Crown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ============================================================
-// 🔥 API BASE - Works EVERYWHERE (Local + Live!)
+// 🔥 API BASE
 // ============================================================
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-interface Slide {
-  id: number;
-  image_url: string;
-  caption: string;
-  order: number;
-  active: boolean;
-}
+// ============================================================
+// 🔥 TYPING EFFECT WORDS
+// ============================================================
+const TYPING_WORDS = [
+  "📊 Fast & Accurate Results",
+  "🏆 Excellence in Education",
+  "📈 Track Student Performance",
+  "👨‍🏫 Empowering Teachers",
+  "🎓 Shaping Future Leaders",
+];
 
-interface SidebarItem {
-  id: number;
-  image_url: string;
-  title: string;
-  caption: string;
-  order: number;
-  active: boolean;
-}
+// ============================================================
+// 🔥 TYPING EFFECT COMPONENT
+// ============================================================
+function TypingEffect() {
+  const [text, setText] = useState("");
+  const [wordIndex, setWordIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isWaiting, setIsWaiting] = useState(false);
 
-interface Ad {
-  id: number;
-  image_url: string;
-  title: string;
-  caption: string;
-  link: string;
-  order: number;
-  active: boolean;
+  useEffect(() => {
+    const currentWord = TYPING_WORDS[wordIndex];
+    
+    const timer = setTimeout(() => {
+      if (isWaiting) {
+        setIsWaiting(false);
+        return;
+      }
+      
+      if (!isDeleting) {
+        if (text.length < currentWord.length) {
+          setText(currentWord.substring(0, text.length + 1));
+        } else {
+          setIsWaiting(true);
+          setTimeout(() => {
+            setIsDeleting(true);
+          }, 2000);
+        }
+      } else {
+        if (text.length > 0) {
+          setText(currentWord.substring(0, text.length - 1));
+        } else {
+          setIsDeleting(false);
+          setWordIndex((prev) => (prev + 1) % TYPING_WORDS.length);
+        }
+      }
+    }, isDeleting ? 50 : 100);
+
+    return () => clearTimeout(timer);
+  }, [text, wordIndex, isDeleting, isWaiting]);
+
+  return (
+    <div className="h-7 sm:h-9 md:h-10 flex items-center justify-center">
+      <span className="text-lg sm:text-xl md:text-2xl font-semibold text-white/95">
+        {text}
+        <span className="inline-block w-0.5 h-5 sm:h-6 md:h-7 ml-0.5 bg-white animate-pulse" />
+      </span>
+    </div>
+  );
 }
 
 // ============================================================
@@ -82,7 +120,7 @@ function MobileHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <header className="bg-white/90 backdrop-blur-xl shadow-sm sticky top-0 z-50 border-b border-sky-200/60">
+    <header className="bg-white/95 backdrop-blur-xl shadow-md sticky top-0 z-50 border-b border-sky-200/60">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 sm:h-16">
           {/* Logo */}
@@ -164,146 +202,107 @@ function MobileHeader() {
 }
 
 // ============================================================
-// 🔥 MOBILE SLIDESHOW
+// 🔥 HERO SECTION - PRO MAX, ILIYOPUNGUZWA UKUBWA!
 // ============================================================
 
-function MobileSlideshow({ slides }: { slides: Slide[] }) {
-  const [currentSlide, setCurrentSlide] = useState(0);
-
-  useEffect(() => {
-    if (slides.length === 0) return;
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [slides.length]);
-
-  const goToSlide = (index: number) => {
-    setCurrentSlide(index);
-  };
-
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % slides.length);
-  };
-
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
-  };
-
-  if (slides.length === 0) {
-    return (
-      <div className="relative h-[300px] sm:h-[400px] md:h-[500px] w-full bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 flex items-center justify-center">
-        <div className="text-center text-white px-4">
-          <div className="mb-3 sm:mb-4 inline-flex items-center gap-2 bg-white/20 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full backdrop-blur-sm">
-            <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
-            <span className="text-xs sm:text-sm font-medium">MASI FAST RESULTS</span>
-          </div>
-          <h1 className="text-2xl sm:text-4xl md:text-6xl font-bold mb-2 sm:mb-4">
-            Fast and Accurate Results
-          </h1>
-          <p className="text-sm sm:text-lg md:text-xl text-white/90">
-            Track student progress with ease
-          </p>
-        </div>
-      </div>
-    );
-  }
-
+function HeroSection() {
   return (
-    <div className="relative h-[300px] sm:h-[400px] md:h-[500px] w-full overflow-hidden">
-      {/* Slides */}
-      <div
-        className="flex transition-transform duration-500 ease-in-out h-full"
-        style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-      >
-        {slides.map((slide) => (
-          <div key={slide.id} className="w-full flex-shrink-0 h-full relative">
-            <img
-              src={slide.image_url}
-              alt={slide.caption || "School slide"}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center p-4">
-              <div className="text-center text-white max-w-2xl">
-                <div className="mb-2 sm:mb-4 inline-flex items-center gap-2 bg-white/20 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full backdrop-blur-sm">
-                  <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="text-xs sm:text-sm font-medium">MASI FAST RESULTS</span>
-                </div>
-                <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-2 sm:mb-4">
-                  Fast and Accurate Results
-                </h1>
-                <p className="text-sm sm:text-lg md:text-xl text-white/90">
-                  {slide.caption || "Track student progress with ease"}
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
+    <div className="relative overflow-hidden bg-gradient-to-br from-sky-600 via-blue-600 to-indigo-700">
+      {/* Decorative Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-72 h-72 md:w-96 md:h-96 bg-sky-400/20 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-72 h-72 md:w-96 md:h-96 bg-blue-400/20 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-400/10 rounded-full blur-3xl" />
       </div>
 
-      {/* Navigation Arrows - Hidden on very small screens */}
-      {slides.length > 1 && (
-        <>
-          <button
-            onClick={prevSlide}
-            className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-1.5 sm:p-2 rounded-full backdrop-blur-sm transition-all touch-feedback hidden xs:block"
-            aria-label="Previous slide"
-          >
-            <ChevronLeft className="h-4 w-4 sm:h-6 sm:w-6" />
-          </button>
-          <button
-            onClick={nextSlide}
-            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-1.5 sm:p-2 rounded-full backdrop-blur-sm transition-all touch-feedback hidden xs:block"
-            aria-label="Next slide"
-          >
-            <ChevronRight className="h-4 w-4 sm:h-6 sm:w-6" />
-          </button>
-        </>
-      )}
+      <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-8 sm:py-12 md:py-16">
+        <div className="text-center">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-white text-xs sm:text-sm font-medium mb-3 sm:mb-4 animate-fadeIn">
+            <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
+            MASI FAST RESULTS
+          </div>
 
-      {/* Slide indicators */}
-      <div className="absolute bottom-3 sm:bottom-4 left-0 right-0 flex justify-center gap-1.5 sm:gap-2">
-        {slides.map((_, idx) => (
-          <button
-            key={idx}
-            onClick={() => goToSlide(idx)}
-            type="button"
-            className={cn(
-              "w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all focus:outline-none touch-feedback",
-              currentSlide === idx 
-                ? "bg-white w-4 sm:w-6" 
-                : "bg-white/50 hover:bg-white/75"
-            )}
-            aria-label={`Go to slide ${idx + 1}`}
-          />
-        ))}
+          {/* Main Title - Big and Readable */}
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2 sm:mb-3 animate-fadeIn animation-delay-200 leading-tight">
+            Fast & Accurate
+            <span className="block text-sky-200">Student Results</span>
+          </h1>
+
+          {/* Typing Effect - Professional */}
+          <div className="mb-3 sm:mb-4 animate-fadeIn animation-delay-400">
+            <TypingEffect />
+          </div>
+
+          {/* Description - Clear and Readable for Parents */}
+          <p className="text-white/90 text-sm sm:text-base md:text-lg max-w-2xl mx-auto px-2 animate-fadeIn animation-delay-600 leading-relaxed">
+            A modern platform for teachers, parents, and students to track 
+            academic progress quickly and accurately.
+          </p>
+
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mt-5 sm:mt-6 animate-fadeIn animation-delay-800">
+            <Link href="/login" className="w-full sm:w-auto">
+              <Button
+                size="lg"
+                className="w-full sm:w-auto bg-white text-sky-700 hover:bg-gray-100 gap-2 shadow-lg hover:shadow-xl text-sm sm:text-base h-11 sm:h-12 px-6 sm:px-8 touch-feedback"
+              >
+                <LogIn className="h-4 w-4 sm:h-5 sm:w-5" />
+                Login as Teacher
+                <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
+              </Button>
+            </Link>
+            <Link href="/parent/login" className="w-full sm:w-auto">
+              <Button
+                size="lg"
+                className="w-full sm:w-auto bg-white/20 backdrop-blur-sm text-white border-2 border-white/30 hover:bg-white/30 gap-2 shadow-lg hover:shadow-xl text-sm sm:text-base h-11 sm:h-12 px-6 sm:px-8 touch-feedback"
+              >
+                <UsersRound className="h-4 w-4 sm:h-5 sm:w-5" />
+                Ingia kama Mzazi
+              </Button>
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
 // ============================================================
-// 🔥 FEATURE CARD
+// 🔥 FEATURE CARD - PRO MAX!
 // ============================================================
 
-function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
+function FeatureCard({ icon, title, description, color = "sky" }: { icon: React.ReactNode; title: string; description: string; color?: "sky" | "emerald" | "purple" | "amber" | "rose" | "indigo" }) {
+  const colors = {
+    sky: "from-sky-500 to-blue-500",
+    emerald: "from-emerald-500 to-teal-500",
+    purple: "from-purple-500 to-pink-500",
+    amber: "from-amber-500 to-orange-500",
+    rose: "from-rose-500 to-pink-500",
+    indigo: "from-indigo-500 to-blue-500",
+  };
+
   return (
-    <Card className="text-center hover:shadow-xl transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm hover:-translate-y-1 touch-feedback">
-      <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
-        <div className="mx-auto w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center mb-3 sm:mb-4 bg-sky-100">
-          <div className="h-6 w-6 sm:h-7 sm:w-7 text-sky-600">
+    <Card className="text-center hover:shadow-2xl transition-all duration-500 border-0 bg-white/90 backdrop-blur-sm hover:-translate-y-2 hover:scale-[1.02] touch-feedback group">
+      <CardContent className="pt-5 sm:pt-7 px-4 sm:px-6 pb-5 sm:pb-7">
+        <div className={cn(
+          "mx-auto w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-3 sm:mb-4",
+          "bg-gradient-to-br",
+          colors[color]
+        )}>
+          <div className="h-6 w-6 sm:h-7 sm:w-7 text-white group-hover:scale-110 transition-transform duration-300">
             {icon}
           </div>
         </div>
         <h3 className="text-base sm:text-xl font-semibold mb-1 sm:mb-2 text-gray-800">{title}</h3>
-        <p className="text-xs sm:text-sm text-gray-600">{description}</p>
+        <p className="text-sm sm:text-base text-gray-600 leading-relaxed">{description}</p>
       </CardContent>
     </Card>
   );
 }
 
 // ============================================================
-// 🔥 LOGIN CARD
+// 🔥 LOGIN CARD - PRO MAX!
 // ============================================================
 
 function LoginCard({ 
@@ -314,7 +313,8 @@ function LoginCard({
   loginHref, 
   registerHref, 
   loginLabel, 
-  registerLabel 
+  registerLabel,
+  color = "sky"
 }: { 
   title: string;
   description: string;
@@ -324,20 +324,23 @@ function LoginCard({
   registerHref: string;
   loginLabel: string;
   registerLabel: string;
+  color?: "sky" | "emerald";
 }) {
   return (
-    <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-xl hover:shadow-3xl transition-all duration-300 hover:-translate-y-1">
-      <CardHeader className="text-center pt-4 sm:pt-6 px-4 sm:px-6">
+    <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-xl hover:shadow-3xl transition-all duration-500 hover:-translate-y-2 group">
+      <CardHeader className="text-center pt-5 sm:pt-7 px-4 sm:px-6">
         <div className={cn(
-          "mx-auto p-2.5 sm:p-3 rounded-2xl w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center mb-3 sm:mb-4 shadow-lg",
+          "mx-auto p-3 sm:p-3.5 rounded-2xl w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center mb-3 sm:mb-4 shadow-lg",
           gradient
         )}>
-          {icon}
+          <div className="h-7 w-7 sm:h-9 sm:w-9 text-white">
+            {icon}
+          </div>
         </div>
-        <CardTitle className="text-lg sm:text-2xl font-bold text-gray-800">{title}</CardTitle>
-        <CardDescription className="text-xs sm:text-sm text-gray-600">{description}</CardDescription>
+        <CardTitle className="text-xl sm:text-2xl font-bold text-gray-800">{title}</CardTitle>
+        <CardDescription className="text-sm sm:text-base text-gray-600 mt-1">{description}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-2 sm:space-y-3 px-4 sm:px-6 pb-4 sm:pb-6">
+      <CardContent className="space-y-3 sm:space-y-4 px-4 sm:px-6 pb-5 sm:pb-7">
         <Link href={loginHref}>
           <Button className="w-full gap-2 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 shadow-lg hover:shadow-xl text-sm sm:text-base h-11 sm:h-12 touch-feedback">
             <LogIn className="h-4 w-4" />
@@ -362,219 +365,125 @@ function LoginCard({
 
 export default function HomePage() {
   const router = useRouter();
-  const [slides, setSlides] = useState<Slide[]>([]);
-  const [sidebarItems, setSidebarItems] = useState<SidebarItem[]>([]);
-  const [ads, setAds] = useState<Ad[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchHomepageData();
-  }, []);
-
-  const fetchHomepageData = async () => {
-    try {
-      const [slidesRes, sidebarRes, adsRes] = await Promise.all([
-        fetch(`${API_BASE}/api/v1/homepage/slides?active_only=true`),
-        fetch(`${API_BASE}/api/v1/homepage/sidebar?active_only=true`),
-        fetch(`${API_BASE}/api/v1/homepage/ads?active_only=true`),
-      ]);
-
-      if (slidesRes.ok) {
-        const slidesData = await slidesRes.json();
-        setSlides(slidesData.sort((a: Slide, b: Slide) => a.order - b.order));
-      }
-      if (sidebarRes.ok) {
-        const sidebarData = await sidebarRes.json();
-        setSidebarItems(sidebarData.sort((a: SidebarItem, b: SidebarItem) => a.order - b.order));
-      }
-      if (adsRes.ok) {
-        const adsData = await adsRes.json();
-        setAds(adsData.sort((a: Ad, b: Ad) => a.order - b.order));
-      }
-    } catch (err) {
-      console.error("Error fetching homepage data:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <MobileLayout>
-        <MobileHeader />
-        <div className="min-h-[60vh] flex items-center justify-center">
-          <div className="text-center">
-            <div className="relative">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-sky-400/30 border-t-sky-500 border-r-blue-600 rounded-full animate-spin" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 border-4 border-purple-400/30 border-b-purple-500 border-l-indigo-600 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '0.8s' }} />
-              </div>
-            </div>
-            <p className="text-gray-600 mt-4 text-sm sm:text-base animate-pulse">Loading...</p>
-          </div>
-        </div>
-      </MobileLayout>
-    );
-  }
 
   return (
     <MobileLayout>
       <MobileHeader />
 
       <main>
-        {/* Hero Slideshow */}
-        <MobileSlideshow slides={slides} />
+        {/* Hero Section - PRO MAX, ILIYOPUNGUZWA! */}
+        <HeroSection />
 
         {/* Features Section */}
-        <section className="py-8 sm:py-16 px-3 sm:px-4 max-w-7xl mx-auto">
-          <div className="text-center mb-6 sm:mb-12">
-            <Badge className="bg-sky-100 text-sky-700 border-sky-200 mb-2 sm:mb-3 text-xs sm:text-sm">
-              <Sparkles className="h-3 w-3 mr-1" />
+        <section className="py-10 sm:py-16 px-3 sm:px-4 max-w-7xl mx-auto">
+          <div className="text-center mb-8 sm:mb-12">
+            <Badge className="bg-sky-100 text-sky-700 border-sky-200 mb-3 sm:mb-4 text-sm sm:text-base px-4 py-1.5">
+              <Sparkles className="h-4 w-4 mr-1.5" />
               Why MASI FAST RESULTS?
             </Badge>
-            <h2 className="text-xl sm:text-3xl font-bold text-gray-800">
-              Fast & Accurate Results
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800">
+              Empowering Education
             </h2>
-            <p className="text-xs sm:text-base text-gray-600 mt-1 sm:mt-2 max-w-2xl mx-auto">
+            <p className="text-sm sm:text-base md:text-lg text-gray-600 mt-2 max-w-3xl mx-auto leading-relaxed">
               A modern system for viewing student results quickly and accurately
             </p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             <FeatureCard 
               icon={<Clock className="h-6 w-6 sm:h-7 sm:w-7" />}
               title="Fast Results"
-              description="Get student results instantly"
+              description="Get student results instantly with just a few clicks"
+              color="sky"
             />
             <FeatureCard 
               icon={<CheckCircle className="h-6 w-6 sm:h-7 sm:w-7" />}
               title="Accurate & Detailed"
-              description="Complete student information"
+              description="Complete student information with detailed reports"
+              color="emerald"
             />
             <FeatureCard 
               icon={<UsersRound className="h-6 w-6 sm:h-7 sm:w-7" />}
               title="Easy for Parents"
-              description="Track your child's progress easily"
+              description="Track your child's academic progress easily"
+              color="purple"
             />
             <FeatureCard 
               icon={<TrendingUp className="h-6 w-6 sm:h-7 sm:w-7" />}
               title="Progress Tracking"
-              description="Monitor grade trends over time"
+              description="Monitor grade trends and performance over time"
+              color="amber"
             />
           </div>
         </section>
 
         {/* Login Cards */}
-        <section className="py-8 sm:py-12 px-3 sm:px-4 max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
+        <section className="py-10 sm:py-16 px-3 sm:px-4 max-w-6xl mx-auto">
+          <div className="text-center mb-8 sm:mb-12">
+            <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 mb-3 sm:mb-4 text-sm sm:text-base px-4 py-1.5">
+              <UsersRound className="h-4 w-4 mr-1.5" />
+              Get Started
+            </Badge>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800">
+              Choose Your Role
+            </h2>
+            <p className="text-sm sm:text-base md:text-lg text-gray-600 mt-2 max-w-3xl mx-auto leading-relaxed">
+              Select the appropriate login based on your role in the education system
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
             <LoginCard
               title="Teacher / Academic"
               description="Manage students, marks, and reports"
-              icon={<Users className="h-6 w-6 sm:h-10 sm:w-10 text-white" />}
+              icon={<Users className="h-6 w-6 sm:h-9 sm:w-9 text-white" />}
               gradient="bg-gradient-to-r from-sky-500 to-blue-600 shadow-sky-500/30"
               loginHref="/login"
               registerHref="/register"
               loginLabel="Login as Teacher"
               registerLabel="Register as Teacher"
+              color="sky"
             />
             <LoginCard
               title="Mzazi / Mlezi"
               description="Angalia matokeo ya mtoto wako"
-              icon={<UsersRound className="h-6 w-6 sm:h-10 sm:w-10 text-white" />}
+              icon={<UsersRound className="h-6 w-6 sm:h-9 sm:w-9 text-white" />}
               gradient="bg-gradient-to-r from-emerald-500 to-teal-600 shadow-emerald-500/30"
               loginHref="/parent/login"
               registerHref="/parent/register"
               loginLabel="Ingia kama Mzazi"
               registerLabel="Jisajili kama Mzazi"
+              color="emerald"
             />
           </div>
         </section>
 
-        {/* Sidebar Items Section */}
-        {sidebarItems.length > 0 && (
-          <section className="py-8 sm:py-16 bg-white/50 backdrop-blur-sm">
-            <div className="max-w-7xl mx-auto px-3 sm:px-4">
-              <div className="text-center mb-6 sm:mb-12">
-                <Badge className="bg-purple-100 text-purple-700 border-purple-200 mb-2 sm:mb-3 text-xs sm:text-sm">
-                  <Star className="h-3 w-3 mr-1" />
-                  Our Services
-                </Badge>
-                <h2 className="text-xl sm:text-3xl font-bold text-gray-800">What We Offer</h2>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
-                {sidebarItems.map((item) => (
-                  <Card key={item.id} className="hover:shadow-xl transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm hover:-translate-y-1">
-                    <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
-                      <img
-                        src={item.image_url}
-                        alt={item.title}
-                        className="w-full h-32 sm:h-48 object-cover rounded-lg mb-3 sm:mb-4"
-                      />
-                      <h3 className="text-base sm:text-xl font-semibold mb-1 sm:mb-2 text-gray-800">{item.title}</h3>
-                      <p className="text-xs sm:text-sm text-gray-600">{item.caption}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Ads Section */}
-        {ads.length > 0 && (
-          <section className="py-8 sm:py-16 px-3 sm:px-4 max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
-              {ads.map((ad) => (
-                <a
-                  key={ad.id}
-                  href={ad.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block hover:scale-105 transition-transform duration-300 touch-feedback"
-                >
-                  <Card className="overflow-hidden border-0 bg-white/80 backdrop-blur-sm">
-                    <img
-                      src={ad.image_url}
-                      alt={ad.title}
-                      className="w-full h-32 sm:h-48 object-cover"
-                    />
-                    <CardContent className="pt-3 sm:pt-4 px-3 sm:px-6 pb-3 sm:pb-4">
-                      <h3 className="text-sm sm:text-lg font-semibold mb-1 text-gray-800">{ad.title}</h3>
-                      <p className="text-xs sm:text-sm text-gray-600">{ad.caption}</p>
-                    </CardContent>
-                  </Card>
-                </a>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* CTA Section */}
-        <section className="bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 py-8 sm:py-16">
+        {/* CTA Section - PRO MAX */}
+        <section className="bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-700 py-10 sm:py-16">
           <div className="max-w-7xl mx-auto px-3 sm:px-4 text-center">
-            <div className="inline-flex items-center gap-2 bg-white/20 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-white text-xs sm:text-sm font-medium mb-3 sm:mb-4">
-              <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
+            <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 sm:px-5 py-1.5 sm:py-2 rounded-full text-white text-sm sm:text-base font-medium mb-4 sm:mb-5">
+              <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
               MASI FAST RESULTS
             </div>
-            <h2 className="text-xl sm:text-3xl font-bold text-white mb-2 sm:mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-3 sm:mb-4">
               Ready to See Results?
             </h2>
-            <p className="text-white/90 text-sm sm:text-base mb-6 sm:mb-8 max-w-2xl mx-auto px-2">
+            <p className="text-white/90 text-sm sm:text-base md:text-lg mb-6 sm:mb-8 max-w-2xl mx-auto px-2 leading-relaxed">
               Join our system and start viewing student results quickly and accurately
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
               <Link href="/login" className="w-full sm:w-auto">
                 <Button
                   size="lg"
-                  className="w-full sm:w-auto bg-white text-sky-700 hover:bg-gray-100 gap-2 shadow-lg hover:shadow-xl text-sm sm:text-base h-11 sm:h-12 touch-feedback"
+                  className="w-full sm:w-auto bg-white text-sky-700 hover:bg-gray-100 gap-2 shadow-lg hover:shadow-xl text-sm sm:text-base h-11 sm:h-12 px-6 sm:px-8 touch-feedback"
                 >
                   <LogIn className="h-4 w-4 sm:h-5 sm:w-5" />
                   Login as Teacher
+                  <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
               </Link>
               <Link href="/parent/login" className="w-full sm:w-auto">
                 <Button
                   size="lg"
-                  className="w-full sm:w-auto bg-white text-emerald-700 hover:bg-gray-100 gap-2 shadow-lg hover:shadow-xl text-sm sm:text-base h-11 sm:h-12 touch-feedback"
+                  className="w-full sm:w-auto bg-white/20 backdrop-blur-sm text-white border-2 border-white/30 hover:bg-white/30 gap-2 shadow-lg hover:shadow-xl text-sm sm:text-base h-11 sm:h-12 px-6 sm:px-8 touch-feedback"
                 >
                   <UsersRound className="h-4 w-4 sm:h-5 sm:w-5" />
                   Ingia kama Mzazi
@@ -614,8 +523,31 @@ export default function HomePage() {
           from { opacity: 0; transform: translateY(-10px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
         .animate-slideDown {
           animation: slideDown 0.3s ease-out;
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.6s ease-out forwards;
+        }
+        .animation-delay-200 {
+          animation-delay: 200ms;
+          opacity: 0;
+        }
+        .animation-delay-400 {
+          animation-delay: 400ms;
+          opacity: 0;
+        }
+        .animation-delay-600 {
+          animation-delay: 600ms;
+          opacity: 0;
+        }
+        .animation-delay-800 {
+          animation-delay: 800ms;
+          opacity: 0;
         }
         .touch-feedback {
           @apply active:scale-95 transition-transform duration-150;
