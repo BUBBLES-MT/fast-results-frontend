@@ -72,7 +72,6 @@ import { cn } from "@/lib/utils";
 // 🔥 TYPING EFFECT - WORDS TO DISPLAY
 // ============================================================
 const TYPING_WORDS = [
-  "👇 Bonyeza kitufe cha BLUE hapa chini kuona matokeo ya mtoto wako",
   "📊 Fast & Accurate Results",
   "🏆 Excellence in Education",
   "📈 Track Student Performance",
