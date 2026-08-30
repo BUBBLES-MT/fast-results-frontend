@@ -992,7 +992,7 @@ export default function RipotiZaMaendeleoYaDarasaPage() {
               </div>
               <p className="text-[10px] sm:text-xs text-purple-600/80 mt-2 flex items-center gap-1">
                 <Trophy className="h-3 w-3" />
-                Mkuu wa Shule anajulikana kama Mwalimu Mkuu katika shule za msingi
+                Mwalimu Mkuu (Administrator)
               </p>
             </div>
 
