@@ -49,7 +49,11 @@ import {
   Key,
   BookOpen,
   Calendar,
+  Check,
+  XCircle,
+  Lock,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -76,6 +80,218 @@ interface Student {
   roll_number: string;
   class_name: string;
   stream_name: string;
+}
+
+// ============================================================
+// 🔥 PASSWORD STRENGTH COMPONENT
+// ============================================================
+function PasswordSection({
+  password,
+  confirmPassword,
+  showPassword,
+  setShowPassword,
+  showConfirmPassword,
+  setShowConfirmPassword,
+  onPasswordChange,
+  onConfirmChange,
+}: {
+  password: string;
+  confirmPassword: string;
+  showPassword: boolean;
+  setShowPassword: (show: boolean) => void;
+  showConfirmPassword: boolean;
+  setShowConfirmPassword: (show: boolean) => void;
+  onPasswordChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onConfirmChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}) {
+  // Check password requirements
+  const hasMinLength = password.length >= 6;
+  const hasUpperCase = /[A-Z]/.test(password);
+  const hasLowerCase = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+  const requirementsMet = [hasMinLength, hasUpperCase, hasLowerCase, hasNumber, hasSpecialChar];
+  const requirementsCount = requirementsMet.filter(Boolean).length;
+
+  // Calculate strength
+  const getStrength = () => {
+    if (password.length === 0) return { label: "", color: "", width: 0 };
+    if (requirementsCount <= 2) return { label: "Dhaifu", color: "bg-red-500", width: 20 };
+    if (requirementsCount === 3) return { label: "Wastani", color: "bg-orange-500", width: 40 };
+    if (requirementsCount === 4) return { label: "Nzuri", color: "bg-blue-500", width: 70 };
+    return { label: "Imara 💪", color: "bg-emerald-500", width: 100 };
+  };
+
+  const strength = getStrength();
+
+  // Check if passwords match
+  const passwordsMatch = password.length > 0 && confirmPassword.length > 0 && password === confirmPassword;
+  const passwordsDontMatch = confirmPassword.length > 0 && password !== confirmPassword;
+
+  return (
+    <div className="space-y-3">
+      {/* Password Field */}
+      <div className="space-y-2">
+        <Label className="text-gray-700 font-medium flex items-center gap-2">
+          <Lock className="h-4 w-4 text-sky-600" />
+          Nenosiri *
+        </Label>
+        <div className="relative">
+          <Input
+            type={showPassword ? "text" : "password"}
+            placeholder="Angalau herufi 6, herufi, namba na alama maalum"
+            value={password}
+            onChange={onPasswordChange}
+            className={cn(
+              "bg-white/80 border-gray-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 pr-12 h-11 rounded-xl transition-all duration-200",
+              password.length > 0 && "border-sky-300"
+            )}
+            required
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors touch-feedback"
+          >
+            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Password Strength Bar */}
+      {password.length > 0 && (
+        <div className="space-y-1 animate-slideIn">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-gray-500">Nguvu ya Nenosiri</span>
+            <span
+              className={cn(
+                "text-xs font-semibold",
+                strength.label === "Dhaifu" && "text-red-500",
+                strength.label === "Wastani" && "text-orange-500",
+                strength.label === "Nzuri" && "text-blue-500",
+                strength.label === "Imara 💪" && "text-emerald-500"
+              )}
+            >
+              {strength.label}
+            </span>
+          </div>
+          <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className={cn("h-full rounded-full transition-all duration-500", strength.color)}
+              style={{ width: `${strength.width}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Password Requirements Checklist */}
+      {password.length > 0 && (
+        <div className="grid grid-cols-2 gap-1 animate-slideIn">
+          <div className="flex items-center gap-1.5">
+            {hasMinLength ? (
+              <Check className="h-3 w-3 text-emerald-500" />
+            ) : (
+              <XCircle className="h-3 w-3 text-gray-300" />
+            )}
+            <span className={cn("text-[10px]", hasMinLength ? "text-emerald-600" : "text-gray-400")}>
+              Angalau herufi 6
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            {hasUpperCase ? (
+              <Check className="h-3 w-3 text-emerald-500" />
+            ) : (
+              <XCircle className="h-3 w-3 text-gray-300" />
+            )}
+            <span className={cn("text-[10px]", hasUpperCase ? "text-emerald-600" : "text-gray-400")}>
+              Herufi Kubwa (A-Z)
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            {hasLowerCase ? (
+              <Check className="h-3 w-3 text-emerald-500" />
+            ) : (
+              <XCircle className="h-3 w-3 text-gray-300" />
+            )}
+            <span className={cn("text-[10px]", hasLowerCase ? "text-emerald-600" : "text-gray-400")}>
+              Herufi Ndogo (a-z)
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            {hasNumber ? (
+              <Check className="h-3 w-3 text-emerald-500" />
+            ) : (
+              <XCircle className="h-3 w-3 text-gray-300" />
+            )}
+            <span className={cn("text-[10px]", hasNumber ? "text-emerald-600" : "text-gray-400")}>
+              Namba (0-9)
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 col-span-2">
+            {hasSpecialChar ? (
+              <Check className="h-3 w-3 text-emerald-500" />
+            ) : (
+              <XCircle className="h-3 w-3 text-gray-300" />
+            )}
+            <span className={cn("text-[10px]", hasSpecialChar ? "text-emerald-600" : "text-gray-400")}>
+              Alama Maalum (!@#$%^&* n.k.)
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Password Field */}
+      <div className="space-y-2">
+        <Label className="text-gray-700 font-medium flex items-center gap-2">
+          <Lock className="h-4 w-4 text-sky-600" />
+          Hakikisha Nenosiri *
+        </Label>
+        <div className="relative">
+          <Input
+            type={showConfirmPassword ? "text" : "password"}
+            placeholder="Hakikisha nenosiri lako"
+            value={confirmPassword}
+            onChange={onConfirmChange}
+            className={cn(
+              "bg-white/80 border-gray-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 pr-12 h-11 rounded-xl transition-all duration-200",
+              passwordsMatch && "border-emerald-500 ring-2 ring-emerald-200",
+              passwordsDontMatch && "border-red-500 ring-2 ring-red-200"
+            )}
+            required
+          />
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors touch-feedback"
+          >
+            {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+          </button>
+        </div>
+
+        {/* Match Status Indicator */}
+        {confirmPassword.length > 0 && (
+          <div className="flex items-center gap-1.5 mt-1 animate-slideIn">
+            {passwordsMatch ? (
+              <>
+                <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                <span className="text-xs text-emerald-600 font-medium">
+                  ✅ Nenosiri zinafanana!
+                </span>
+              </>
+            ) : passwordsDontMatch ? (
+              <>
+                <AlertCircle className="h-3.5 w-3.5 text-red-500" />
+                <span className="text-xs text-red-600 font-medium">
+                  ❌ Nenosiri hazifanani!
+                </span>
+              </>
+            ) : null}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default function ParentRegisterPage() {
@@ -232,6 +448,14 @@ export default function ParentRegisterPage() {
 
   const handleParentChange = (field: string, value: string) => {
     setParentData({ ...parentData, [field]: value });
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setParentData({ ...parentData, password: e.target.value });
+  };
+
+  const handleConfirmChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setParentData({ ...parentData, confirm_password: e.target.value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -665,54 +889,17 @@ export default function ParentRegisterPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-gray-700 font-medium flex items-center gap-2">
-                      <Key className="h-4 w-4 text-sky-600" />
-                      Nenosiri *
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Herufi 6 au zaidi"
-                        value={parentData.password}
-                        onChange={(e) => handleParentChange("password", e.target.value)}
-                        className="bg-white/80 border-gray-200 focus:ring-2 focus:ring-sky-500 rounded-xl h-11 pr-12 transition-all"
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                      >
-                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                      </button>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-gray-700 font-medium flex items-center gap-2">
-                      <Shield className="h-4 w-4 text-sky-600" />
-                      Hakikisha Nenosiri *
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        type={showConfirmPassword ? "text" : "password"}
-                        placeholder="Hakikisha nenosiri"
-                        value={parentData.confirm_password}
-                        onChange={(e) => handleParentChange("confirm_password", e.target.value)}
-                        className="bg-white/80 border-gray-200 focus:ring-2 focus:ring-sky-500 rounded-xl h-11 pr-12 transition-all"
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                      >
-                        {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                {/* 🔥 PASSWORD SECTION WITH STRENGTH INDICATOR */}
+                <PasswordSection
+                  password={parentData.password}
+                  confirmPassword={parentData.confirm_password}
+                  showPassword={showPassword}
+                  setShowPassword={setShowPassword}
+                  showConfirmPassword={showConfirmPassword}
+                  setShowConfirmPassword={setShowConfirmPassword}
+                  onPasswordChange={handlePasswordChange}
+                  onConfirmChange={handleConfirmChange}
+                />
 
                 <div className="flex gap-3 pt-2">
                   <Button
@@ -804,6 +991,9 @@ export default function ParentRegisterPage() {
         .animation-delay-4000 { animation-delay: 4s; }
         .animation-delay-1500 { animation-delay: 1.5s; }
         .animation-delay-2500 { animation-delay: 2.5s; }
+        .touch-feedback {
+          @apply active:scale-95 transition-transform duration-150;
+        }
       `}</style>
     </div>
   );

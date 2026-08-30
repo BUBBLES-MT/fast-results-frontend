@@ -825,7 +825,8 @@ export default function StudentsPage() {
                     <span className="xs:hidden">Add</span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-[95vw] sm:max-w-2xl bg-white rounded-2xl p-4 sm:p-6">
+                {/* 🔥🔥🔥 ADD STUDENT DIALOG - FIXED FOR MOBILE! 🔥🔥🔥 */}
+                <DialogContent className="max-w-[95vw] sm:max-w-2xl bg-white rounded-2xl p-3 sm:p-6 max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle className="text-lg sm:text-xl flex items-center gap-2 text-gray-800">
                       <Sparkles className="h-5 w-5 text-emerald-600" />
@@ -836,7 +837,7 @@ export default function StudentsPage() {
                     </DialogDescription>
                   </DialogHeader>
                   <form onSubmit={handleCreateStudent}>
-                    <div className="space-y-3 sm:space-y-4 py-4">
+                    <div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
                       <div className="space-y-1.5 sm:space-y-2">
                         <Label className="text-sm font-semibold text-gray-700">Full Name *</Label>
                         <Input
@@ -983,7 +984,7 @@ export default function StudentsPage() {
                     {error && <MobileAlert type="error" message={error} onClose={() => setError("")} />}
                     {success && <MobileAlert type="success" message={success} onClose={() => setSuccess("")} />}
 
-                    <DialogFooter className="flex flex-col sm:flex-row gap-2">
+                    <DialogFooter className="flex flex-col sm:flex-row gap-2 sticky bottom-0 bg-white pb-2 pt-2 border-t border-gray-100">
                       <Button
                         type="button"
                         variant="outline"
@@ -1510,9 +1511,9 @@ export default function StudentsPage() {
         </div>
       </div>
 
-      {/* Edit Student Dialog */}
+      {/* 🔥🔥🔥 EDIT STUDENT DIALOG - FIXED FOR MOBILE! 🔥🔥🔥 */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl bg-white rounded-2xl p-4 sm:p-6">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl bg-white rounded-2xl p-3 sm:p-6 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-lg sm:text-xl flex items-center gap-2 text-gray-800">
               <Edit className="h-5 w-5 text-blue-600" />
@@ -1523,7 +1524,7 @@ export default function StudentsPage() {
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleUpdateStudent}>
-            <div className="space-y-3 sm:space-y-4 py-4">
+            <div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
               <div className="space-y-1.5 sm:space-y-2">
                 <Label className="text-sm font-semibold text-gray-700">Full Name *</Label>
                 <Input
@@ -1656,7 +1657,7 @@ export default function StudentsPage() {
             {error && <MobileAlert type="error" message={error} onClose={() => setError("")} />}
             {success && <MobileAlert type="success" message={success} onClose={() => setSuccess("")} />}
 
-            <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <DialogFooter className="flex flex-col sm:flex-row gap-2 sticky bottom-0 bg-white pb-2 pt-2 border-t border-gray-100">
               <Button
                 type="button"
                 variant="outline"

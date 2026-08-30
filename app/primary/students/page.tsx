@@ -820,7 +820,7 @@ export default function WanafunziPage() {
   };
 
   // ============================================================
-  // 🔍 FILTER STUDENTS - ✅ FIXED: Defined BEFORE use!
+  // 🔍 FILTER STUDENTS
   // ============================================================
   const wanafunziWaliopepetwa = wanafunzi.filter(
     (student) =>
@@ -997,7 +997,8 @@ export default function WanafunziPage() {
                   <span className="xs:hidden">Ongeza</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-[95vw] sm:max-w-2xl bg-white rounded-2xl p-4 sm:p-6">
+              {/* 🔥🔥🔥 DIALOG CONTENT - FIXED FOR MOBILE! 🔥🔥🔥 */}
+              <DialogContent className="max-w-[95vw] sm:max-w-2xl bg-white rounded-2xl p-3 sm:p-6 max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="text-lg sm:text-xl flex items-center gap-2 text-gray-800">
                     <Sparkles className="h-5 w-5 text-emerald-600" />
@@ -1008,7 +1009,7 @@ export default function WanafunziPage() {
                   </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={ongezaMwanafunzi}>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 py-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 py-3 sm:py-4">
                     <div className="space-y-1.5 sm:space-y-2">
                       <Label className="text-sm font-semibold text-gray-700">Jina Kamili *</Label>
                       <Input
@@ -1163,7 +1164,7 @@ export default function WanafunziPage() {
                     <MobileAlert type="error" message={kosa} onClose={() => setKosa("")} />
                   )}
 
-                  <DialogFooter className="flex flex-col sm:flex-row gap-2">
+                  <DialogFooter className="flex flex-col sm:flex-row gap-2 sticky bottom-0 bg-white pb-2 pt-2 border-t border-gray-100">
                     <Button
                       type="button"
                       variant="outline"
@@ -1574,7 +1575,7 @@ export default function WanafunziPage() {
 
       {/* EDIT STUDENT DIALOG */}
       <Dialog open={dialogHaririFungua} onOpenChange={setDialogHaririFungua}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl bg-white rounded-2xl p-4 sm:p-6">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl bg-white rounded-2xl p-3 sm:p-6 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-lg sm:text-xl flex items-center gap-2 text-gray-800">
               <Edit className="h-5 w-5 text-sky-600" />
@@ -1585,7 +1586,7 @@ export default function WanafunziPage() {
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={sasishaMwanafunzi}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 py-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 py-3 sm:py-4">
               <div className="space-y-1.5 sm:space-y-2">
                 <Label className="text-sm font-semibold text-gray-700">Jina Kamili *</Label>
                 <Input
@@ -1704,7 +1705,7 @@ export default function WanafunziPage() {
 
             {kosa && <MobileAlert type="error" message={kosa} onClose={() => setKosa("")} />}
 
-            <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <DialogFooter className="flex flex-col sm:flex-row gap-2 sticky bottom-0 bg-white pb-2 pt-2 border-t border-gray-100">
               <Button
                 type="button"
                 variant="outline"

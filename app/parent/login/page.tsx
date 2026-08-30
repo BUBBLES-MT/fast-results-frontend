@@ -48,7 +48,9 @@ import {
   Heart,
   User,
   Key,
+  X,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -183,8 +185,8 @@ export default function ParentLoginPage() {
         </div>
       </div>
 
-      {/* 🔥 Main Card */}
-      <Card className="w-full max-w-md shadow-2xl border-0 bg-white/90 backdrop-blur-xl relative z-10 animate-fadeIn rounded-2xl overflow-hidden">
+      {/* 🔥 Main Card - UPANA UMEONGEZWA! */}
+      <Card className="w-full max-w-lg shadow-2xl border-0 bg-white/90 backdrop-blur-xl relative z-10 animate-fadeIn rounded-2xl overflow-hidden">
         {/* Top gradient bar */}
         <div className="h-1.5 w-full bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500" />
         
@@ -202,7 +204,7 @@ export default function ParentLoginPage() {
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="px-6 pb-6">
+        <CardContent className="px-8 pb-8">
           <form onSubmit={handleLogin} className="space-y-6">
             {/* 🔥 Error Message */}
             {error && (
@@ -251,7 +253,7 @@ export default function ParentLoginPage() {
               </div>
             </div>
 
-            {/* 🔥 Password Field */}
+            {/* 🔥 Password Field - BILA PASSWORD STRENGTH */}
             <div className="space-y-2">
               <Label className="text-gray-700 font-medium flex items-center gap-2">
                 <Key className="h-4 w-4 text-sky-600" />
@@ -272,7 +274,7 @@ export default function ParentLoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors touch-feedback"
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -323,7 +325,7 @@ export default function ParentLoginPage() {
         </CardContent>
 
         {/* 🔥 Footer */}
-        <CardFooter className="flex flex-col gap-3 border-t border-gray-200/60 pt-5 pb-6 px-6 bg-gray-50/30">
+        <CardFooter className="flex flex-col gap-3 border-t border-gray-200/60 pt-5 pb-6 px-8 bg-gray-50/30">
           <p className="text-sm text-gray-600">
             Hujasajiliwa?{" "}
             <Link
@@ -453,6 +455,9 @@ export default function ParentLoginPage() {
         .animation-delay-4000 { animation-delay: 4s; }
         .animation-delay-1500 { animation-delay: 1.5s; }
         .animation-delay-2500 { animation-delay: 2.5s; }
+        .touch-feedback {
+          @apply active:scale-95 transition-transform duration-150;
+        }
       `}</style>
     </div>
   );
