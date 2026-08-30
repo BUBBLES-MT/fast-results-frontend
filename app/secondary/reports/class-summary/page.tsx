@@ -1002,7 +1002,7 @@ export default function ClassSummaryPage() {
                       <tr className="bg-gray-100">
                         <th className="border p-1 sm:p-2 w-8 sm:w-12 text-center">#</th>
                         <th className="border p-1 sm:p-2 text-center">EXAM NO</th>
-                        <th className="border p-1 sm:p-2 text-left min-w-[100px]">STUDENT NAME</th>
+                        <th className="border p-1 sm:p-2 text-left min-w-[180px]">STUDENT NAME</th>
                         <th className="border p-1 sm:p-2 w-8 sm:w-12 text-center hidden xs:table-cell">SEX</th>
                         {summaryData.subject_names.map((sub) => (
                           <th key={sub} className="border p-1 sm:p-2 text-center min-w-[40px] sm:min-w-[60px]">

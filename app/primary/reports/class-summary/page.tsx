@@ -1060,7 +1060,7 @@ export default function MuhtasariWaMatokeoYaDarasaPage() {
                       <tr className="bg-gray-100">
                         <th className="border p-1.5 sm:p-2 w-10 sm:w-12 text-center">#</th>
                         <th className="border p-1.5 sm:p-2">N. MTIHANI</th>
-                        <th className="border p-1.5 sm:p-2 text-left min-w-[100px]">JINA</th>
+                        <th className="border p-1.5 sm:p-2 text-left min-w-[220px] sm:min-w-[240px]">JINA KAMILI</th>
                         <th className="border p-1.5 sm:p-2 w-10 sm:w-12 text-center">J</th>
                         {summaryData.subject_names.map((sub) => (
                           <th key={sub} className="border p-1.5 sm:p-2 text-center min-w-[50px] sm:min-w-[60px]">
