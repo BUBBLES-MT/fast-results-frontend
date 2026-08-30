@@ -956,7 +956,7 @@ export default function RipotiZaMaendeleoYaDarasaPage() {
                 <div className="p-1 bg-purple-100 rounded-lg">
                   <Trophy className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-600" />
                 </div>
-                Taarifa za Mkuu wa Shule
+                Taarifa za Mwalimu Mkuu
                 {loadingHeadmaster ? (
                   <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin text-purple-600" />
                 ) : hasHeadmasterName ? (
