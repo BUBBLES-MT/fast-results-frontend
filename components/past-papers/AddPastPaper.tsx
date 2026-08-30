@@ -1,21 +1,27 @@
-// app/components/past-papers/AddPastPaper.tsx
-"use client"
+// components/past-papers/AddPastPaper.tsx
+
+"use client";
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Loader2, Upload, X, FileText, Calendar, GraduationCap, BookOpen, Sparkles } from "lucide-react"
+} from "@/components/ui/select";
+import { Loader2, Upload, X, FileText, Calendar, GraduationCap, BookOpen, Sparkles } from "lucide-react";
+
+// ============================================================
+// 🔥 API BASE - FIXED! Inatumia Environment Variable
+// ============================================================
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 interface Subject {
   id: number;
@@ -35,19 +41,19 @@ interface PastPaperForm {
   file: File | null;
 }
 
-const EXAM_TYPES = ["MIDTERM3", "MIDTERM9", "TERMINAL", "ANNUAL", "NATIONAL", "JOINT MOCK"]
+const EXAM_TYPES = ["MIDTERM3", "MIDTERM9", "TERMINAL", "ANNUAL", "NATIONAL", "JOINT MOCK"];
 
 const CLASS_LEVELS = {
   primary: ["Std 1", "Std 2", "Std 3", "Std 4", "Std 5", "Std 6", "Std 7"],
   secondary: ["Form 1", "Form 2", "Form 3", "Form 4"],
   advanced: ["Form 5", "Form 6"],
-}
+};
 
 const SCHOOL_LEVEL_LABELS = {
   primary: "🏫 Primary School",
   secondary: "📚 Secondary School",
   advanced: "🎓 Advanced Level"
-}
+};
 
 export function AddPastPaper() {
   const router = useRouter();
@@ -84,12 +90,17 @@ export function AddPastPaper() {
     loadSubjects(storedToken, schoolLevel);
   }, [router]);
 
-  // 🔥 FIXED: Load subjects with level filter AND remove duplicates
+  // ============================================================
+  // 🔥 FIXED: Load subjects with API_BASE!
+  // ============================================================
   const loadSubjects = async (authToken: string, schoolLevel: string) => {
     try {
+      setLoading(true);
       console.log(`🔍 Loading subjects for level: ${schoolLevel}`);
+      console.log(`📡 API URL: ${API_BASE}/api/v1/subjects?level=${schoolLevel}`);
       
-      const response = await fetch(`/api/v1/subjects?level=${schoolLevel}`, {
+      // 🔥🔥🔥 SAHIHI: Tumia API_BASE! 🔥🔥🔥
+      const response = await fetch(`${API_BASE}/api/v1/subjects?level=${schoolLevel}`, {
         headers: { 
           Authorization: `Bearer ${authToken}`,
           'Content-Type': 'application/json'
@@ -105,7 +116,7 @@ export function AddPastPaper() {
         const uniqueSubjects = (data || []).filter((sub: Subject) => {
           const key = sub.name;
           if (seen.has(key)) {
-            return false; // Skip duplicate
+            return false;
           }
           seen.add(key);
           return true;
@@ -130,7 +141,7 @@ export function AddPastPaper() {
         setSubjects([]);
         setMessage({ 
           type: 'error', 
-          text: 'Failed to load subjects. Please refresh and try again.' 
+          text: error.detail || 'Failed to load subjects. Please refresh and try again.' 
         });
       }
     } catch (error: any) {
@@ -138,7 +149,7 @@ export function AddPastPaper() {
       setSubjects([]);
       setMessage({ 
         type: 'error', 
-        text: 'Network error. Please check your connection.' 
+        text: error.message || 'Network error. Please check your connection.' 
       });
     } finally {
       setLoading(false);
@@ -167,6 +178,9 @@ export function AddPastPaper() {
     }
   };
 
+  // ============================================================
+  // 🔥 FIXED: Upload with API_BASE!
+  // ============================================================
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -207,7 +221,11 @@ export function AddPastPaper() {
       }
       formData.append('file', form.file);
 
-      const response = await fetch('/api/v1/past-papers/upload', {
+      // 🔥🔥🔥 SAHIHI: Tumia API_BASE! 🔥🔥🔥
+      const url = `${API_BASE}/api/v1/past-papers/upload`;
+      console.log(`📤 Uploading to: ${url}`);
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -238,6 +256,7 @@ export function AddPastPaper() {
         });
         const fileInput = document.getElementById('file-upload') as HTMLInputElement;
         if (fileInput) fileInput.value = '';
+        router.push(`/${userSchoolLevel}/past-papers`);
       }, 2000);
 
     } catch (error: any) {
@@ -322,7 +341,7 @@ export function AddPastPaper() {
               <Button 
                 variant="outline" 
                 className="mt-4 border-yellow-300 text-yellow-700 hover:bg-yellow-100"
-                onClick={() => router.push('/secondary/dashboard')}
+                onClick={() => router.push(`/${userSchoolLevel}/dashboard`)}
               >
                 Go to Dashboard
               </Button>
@@ -362,7 +381,7 @@ export function AddPastPaper() {
                   <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-lg z-50">
                     {subjects.map((sub) => (
                       <SelectItem 
-                        key={`subject-${sub.id}`}  // 🔥 Using ID as key
+                        key={`subject-${sub.id}`}
                         value={sub.name}
                         className="hover:bg-gray-100 cursor-pointer py-2 px-3"
                       >
