@@ -605,7 +605,7 @@ export default function OngezaAlamaPage() {
             school_id: parseInt(storedSchoolId || "0"),
           };
 
-          const url = `${API_BASE}${baseUrl}/marks/`;
+          const url = `${API_BASE}${baseUrl}/marks`;
           console.log(`📤 Sending to: ${url}`);
 
           const response = await fetch(url, {

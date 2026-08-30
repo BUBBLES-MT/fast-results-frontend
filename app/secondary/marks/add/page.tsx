@@ -510,7 +510,7 @@ export default function AddMarksPage() {
             school_id: parseInt(storedSchoolId || "0"),
           };
 
-          const url = `${API_BASE}/api/v1/marks/`;
+          const url = `${API_BASE}/api/v1/marks`;
           console.log(`📤 Sending to: ${url}`);
 
           const response = await fetch(url, {
