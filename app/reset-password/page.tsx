@@ -7,13 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Lock, ArrowLeft, Loader2, CheckCircle, AlertCircle, Eye, EyeOff, Key, Shield } from "lucide-react";
+import { Lock, ArrowLeft, Loader2, CheckCircle, AlertCircle, Eye, EyeOff, Key, Shield, Sparkles, Zap, Star } from "lucide-react";
 
-// 🔥🔥🔥 BADILISHA HAPA - WEKA BACKEND URL HALISI! 🔥🔥🔥
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://fast-results-backend-ewis.onrender.com";
 
 // ============================================================
-// 🔥 CONTENT COMPONENT - WITH useSearchParams
+// 🔥 CONTENT COMPONENT
 // ============================================================
 function ResetPasswordContent() {
   const router = useRouter();
@@ -30,6 +29,7 @@ function ResetPasswordContent() {
   const [isValidToken, setIsValidToken] = useState(false);
   const [isValidating, setIsValidating] = useState(true);
   const [passwordStrength, setPasswordStrength] = useState({ label: "", color: "", width: 0 });
+  const [isHovered, setIsHovered] = useState(false);
 
   // 🔥 Validate token on load
   useEffect(() => {
@@ -153,16 +153,12 @@ function ResetPasswordContent() {
             </CardDescription>
           </CardHeader>
           <CardFooter className="flex flex-col gap-2 justify-center">
-            <Link href="/forgot-password" className="w-full">
-              <Button className="w-full bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700">
-                Request New Link
-              </Button>
-            </Link>
-            <Link href="/login" className="w-full">
-              <Button variant="outline" className="w-full">
-                Back to Login
-              </Button>
-            </Link>
+            <Button 
+              onClick={() => router.push("/login")} 
+              className="w-full bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700"
+            >
+              Back to Login
+            </Button>
           </CardFooter>
         </Card>
       </div>
@@ -170,19 +166,41 @@ function ResetPasswordContent() {
   }
 
   // ============================================================
-  // 🔥 RESET PASSWORD FORM
+  // 🔥 RESET PASSWORD FORM - PRO MAX!
   // ============================================================
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-100 via-blue-100 to-indigo-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-100 via-blue-100 to-indigo-100 p-4 relative overflow-hidden">
+      
+      {/* 🔥 Decorative Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-sky-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob" />
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000" />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-indigo-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000" />
+        
+        {/* 🔥 Floating Icons */}
+        <div className="absolute top-10 left-10 text-sky-200/20 animate-float hidden lg:block">
+          <Lock className="h-16 w-16" />
+        </div>
+        <div className="absolute bottom-10 right-10 text-blue-200/20 animate-float animation-delay-3000 hidden lg:block">
+          <Shield className="h-20 w-20" />
+        </div>
+        <div className="absolute top-1/2 left-5 text-indigo-200/10 animate-float animation-delay-1000 hidden lg:block">
+          <Star className="h-12 w-12" />
+        </div>
       </div>
 
-      <Card className="w-full max-w-md shadow-2xl border-0 bg-white/90 backdrop-blur-xl relative z-10 animate-fadeIn">
-        <CardHeader className="text-center">
-          <div className="mx-auto p-3 bg-gradient-to-br from-sky-500 to-blue-600 rounded-2xl w-16 h-16 flex items-center justify-center shadow-lg shadow-blue-500/30">
-            <Lock className="h-7 w-7 text-white" />
+      {/* 🔥 Main Card */}
+      <Card 
+        className="w-full max-w-md shadow-2xl border-0 bg-white/90 backdrop-blur-xl relative z-10 animate-fadeIn rounded-2xl overflow-hidden"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* Top Gradient Bar */}
+        <div className="h-1.5 w-full bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500" />
+        
+        <CardHeader className="text-center pt-8 pb-4">
+          <div className="mx-auto p-3 bg-gradient-to-br from-sky-500 to-blue-600 rounded-2xl w-20 h-20 flex items-center justify-center shadow-lg shadow-blue-500/30 animate-pulse-soft">
+            <Lock className="h-10 w-10 text-white" />
           </div>
           <CardTitle className="text-2xl font-bold bg-gradient-to-r from-sky-700 to-blue-700 bg-clip-text text-transparent">
             Create New Password
@@ -206,6 +224,7 @@ function ResetPasswordContent() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* 🔥 New Password */}
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-gray-700 font-medium flex items-center gap-2">
                   <Key className="h-4 w-4 text-sky-600" />
@@ -231,6 +250,7 @@ function ResetPasswordContent() {
                   </button>
                 </div>
 
+                {/* 🔥 Password Strength - PRO MAX */}
                 {password.length > 0 && (
                   <div className="space-y-1">
                     <div className="flex items-center justify-between">
@@ -250,10 +270,54 @@ function ResetPasswordContent() {
                         style={{ width: `${passwordStrength.width}%` }}
                       />
                     </div>
+                    {/* 🔥 Requirements Checklist */}
+                    <div className="grid grid-cols-2 gap-1 mt-2">
+                      <div className="flex items-center gap-1.5">
+                        {password.length >= 6 ? (
+                          <CheckCircle className="h-3 w-3 text-emerald-500" />
+                        ) : (
+                          <AlertCircle className="h-3 w-3 text-gray-300" />
+                        )}
+                        <span className={`text-[10px] ${password.length >= 6 ? "text-emerald-600" : "text-gray-400"}`}>
+                          Min 6 chars
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {/[A-Z]/.test(password) ? (
+                          <CheckCircle className="h-3 w-3 text-emerald-500" />
+                        ) : (
+                          <AlertCircle className="h-3 w-3 text-gray-300" />
+                        )}
+                        <span className={`text-[10px] ${/[A-Z]/.test(password) ? "text-emerald-600" : "text-gray-400"}`}>
+                          Uppercase
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {/[a-z]/.test(password) ? (
+                          <CheckCircle className="h-3 w-3 text-emerald-500" />
+                        ) : (
+                          <AlertCircle className="h-3 w-3 text-gray-300" />
+                        )}
+                        <span className={`text-[10px] ${/[a-z]/.test(password) ? "text-emerald-600" : "text-gray-400"}`}>
+                          Lowercase
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {/[0-9]/.test(password) ? (
+                          <CheckCircle className="h-3 w-3 text-emerald-500" />
+                        ) : (
+                          <AlertCircle className="h-3 w-3 text-gray-300" />
+                        )}
+                        <span className={`text-[10px] ${/[0-9]/.test(password) ? "text-emerald-600" : "text-gray-400"}`}>
+                          Number
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
 
+              {/* 🔥 Confirm Password */}
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword" className="text-gray-700 font-medium flex items-center gap-2">
                   <Shield className="h-4 w-4 text-sky-600" />
@@ -283,6 +347,7 @@ function ResetPasswordContent() {
                   </button>
                 </div>
 
+                {/* 🔥 Match Status */}
                 {confirmPassword.length > 0 && (
                   <div className="flex items-center gap-1.5 mt-1">
                     {password === confirmPassword ? (
@@ -300,6 +365,7 @@ function ResetPasswordContent() {
                 )}
               </div>
 
+              {/* 🔥 Error */}
               {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2 text-sm text-red-700 animate-slideDown">
                   <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
@@ -307,11 +373,13 @@ function ResetPasswordContent() {
                 </div>
               )}
 
+              {/* 🔥 Submit Button - PRO MAX */}
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 shadow-lg hover:shadow-xl h-11 touch-feedback"
+                className="w-full bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 shadow-lg hover:shadow-xl h-11 touch-feedback relative overflow-hidden group"
                 disabled={isLoading}
               >
+                <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                 {isLoading ? (
                   <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Resetting...</>
                 ) : (
@@ -322,6 +390,7 @@ function ResetPasswordContent() {
           )}
         </CardContent>
 
+        {/* 🔥 Footer */}
         <CardFooter className="flex justify-center border-t border-gray-200/50 pt-4">
           <Link href="/login" className="text-sm text-gray-600 hover:text-gray-800 flex items-center gap-2 transition-colors">
             <ArrowLeft className="h-4 w-4" />
@@ -330,6 +399,7 @@ function ResetPasswordContent() {
         </CardFooter>
       </Card>
 
+      {/* 🔥 Global Styles */}
       <style jsx global>{`
         @keyframes blob {
           0% { transform: translate(0px, 0px) scale(1); }
@@ -345,10 +415,22 @@ function ResetPasswordContent() {
           from { opacity: 0; transform: translateY(-10px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+        }
+        @keyframes pulse-soft {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+        }
         .animate-blob { animation: blob 7s infinite; }
         .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
         .animate-slideDown { animation: slideDown 0.3s ease-out; }
+        .animate-float { animation: float 6s ease-in-out infinite; }
+        .animate-pulse-soft { animation: pulse-soft 3s ease-in-out infinite; }
         .animation-delay-2000 { animation-delay: 2s; }
+        .animation-delay-3000 { animation-delay: 3s; }
+        .animation-delay-4000 { animation-delay: 4s; }
         .touch-feedback { @apply active:scale-95 transition-transform duration-150; }
       `}</style>
     </div>
