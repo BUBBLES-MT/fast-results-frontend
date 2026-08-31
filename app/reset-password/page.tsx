@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,10 @@ import { Lock, ArrowLeft, Loader2, CheckCircle, AlertCircle, Eye, EyeOff, Key, S
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-export default function ResetPasswordPage() {
+// ============================================================
+// 🔥 CONTENT COMPONENT - WITH useSearchParams
+// ============================================================
+function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
@@ -170,7 +173,6 @@ export default function ResetPasswordPage() {
   // ============================================================
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-100 via-blue-100 to-indigo-100 p-4">
-      {/* Decorative Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-sky-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob" />
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000" />
@@ -200,13 +202,9 @@ export default function ResetPasswordPage() {
               <p className="text-xs text-emerald-500 mt-2">
                 Redirecting to login page...
               </p>
-              <div className="w-full bg-emerald-200 rounded-full h-1.5 mt-3 overflow-hidden">
-                <div className="h-full bg-emerald-500 rounded-full animate-[progress_3s_ease-in-out]" />
-              </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* New Password */}
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-gray-700 font-medium flex items-center gap-2">
                   <Key className="h-4 w-4 text-sky-600" />
@@ -232,7 +230,6 @@ export default function ResetPasswordPage() {
                   </button>
                 </div>
 
-                {/* Password Strength */}
                 {password.length > 0 && (
                   <div className="space-y-1">
                     <div className="flex items-center justify-between">
@@ -256,7 +253,6 @@ export default function ResetPasswordPage() {
                 )}
               </div>
 
-              {/* Confirm Password */}
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword" className="text-gray-700 font-medium flex items-center gap-2">
                   <Shield className="h-4 w-4 text-sky-600" />
@@ -286,7 +282,6 @@ export default function ResetPasswordPage() {
                   </button>
                 </div>
 
-                {/* Password Match Indicator */}
                 {confirmPassword.length > 0 && (
                   <div className="flex items-center gap-1.5 mt-1">
                     {password === confirmPassword ? (
@@ -334,7 +329,6 @@ export default function ResetPasswordPage() {
         </CardFooter>
       </Card>
 
-      {/* Global Styles */}
       <style jsx global>{`
         @keyframes blob {
           0% { transform: translate(0px, 0px) scale(1); }
@@ -350,10 +344,6 @@ export default function ResetPasswordPage() {
           from { opacity: 0; transform: translateY(-10px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        @keyframes progress {
-          0% { width: 0%; }
-          100% { width: 100%; }
-        }
         .animate-blob { animation: blob 7s infinite; }
         .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
         .animate-slideDown { animation: slideDown 0.3s ease-out; }
@@ -361,5 +351,25 @@ export default function ResetPasswordPage() {
         .touch-feedback { @apply active:scale-95 transition-transform duration-150; }
       `}</style>
     </div>
+  );
+}
+
+// ============================================================
+// 🔥 MAIN PAGE - WITH SUSPENSE BOUNDARY!
+// ============================================================
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-100 via-blue-100 to-indigo-100 p-4">
+          <div className="text-center">
+            <Loader2 className="h-10 w-10 animate-spin text-sky-600 mx-auto" />
+            <p className="text-gray-600 mt-4">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <ResetPasswordContent />
+    </Suspense>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,10 @@ import { Mail, ArrowLeft, Loader2, CheckCircle, AlertCircle, Send, Sparkles } fr
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-export default function ForgotPasswordPage() {
+// ============================================================
+// 🔥 CONTENT COMPONENT
+// ============================================================
+function ForgotPasswordContent() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -167,5 +170,25 @@ export default function ForgotPasswordPage() {
         .touch-feedback { @apply active:scale-95 transition-transform duration-150; }
       `}</style>
     </div>
+  );
+}
+
+// ============================================================
+// 🔥 MAIN PAGE - WITH SUSPENSE BOUNDARY
+// ============================================================
+export default function ForgotPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-100 via-blue-100 to-indigo-100 p-4">
+          <div className="text-center">
+            <Loader2 className="h-10 w-10 animate-spin text-sky-600 mx-auto" />
+            <p className="text-gray-600 mt-4">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <ForgotPasswordContent />
+    </Suspense>
   );
 }
