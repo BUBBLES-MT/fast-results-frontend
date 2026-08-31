@@ -12,7 +12,7 @@ import { Lock, ArrowLeft, Loader2, CheckCircle, AlertCircle, Eye, EyeOff, Key, S
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://fast-results-backend-ewis.onrender.com";
 
 // ============================================================
-// 🔥 CONTENT COMPONENT
+// 🔥 CONTENT COMPONENT - Inatumia useSearchParams()
 // ============================================================
 function ResetPasswordContent() {
   const router = useRouter();
