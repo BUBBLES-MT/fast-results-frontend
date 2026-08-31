@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Lock, ArrowLeft, Loader2, CheckCircle, AlertCircle, Eye, EyeOff, Key, Shield } from "lucide-react";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// 🔥🔥🔥 BADILISHA HAPA - WEKA BACKEND URL HALISI! 🔥🔥🔥
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://fast-results-backend-ewis.onrender.com";
 
 // ============================================================
 // 🔥 CONTENT COMPONENT - WITH useSearchParams
