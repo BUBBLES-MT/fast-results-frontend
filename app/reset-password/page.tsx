@@ -125,7 +125,7 @@ function ResetPasswordContent() {
   // ============================================================
   if (isValidating) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-100 via-blue-100 to-indigo-100 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50 p-4">
         <Card className="w-full max-w-md shadow-2xl border-0 bg-white/90 backdrop-blur-xl">
           <CardContent className="py-12 text-center">
             <Loader2 className="h-10 w-10 animate-spin text-sky-600 mx-auto" />
@@ -141,7 +141,7 @@ function ResetPasswordContent() {
   // ============================================================
   if (!isValidToken && !success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-100 via-blue-100 to-indigo-100 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50 p-4">
         <Card className="w-full max-w-md shadow-2xl border-0 bg-white/90 backdrop-blur-xl">
           <CardHeader className="text-center">
             <div className="mx-auto p-3 bg-red-100 rounded-2xl w-16 h-16 flex items-center justify-center">
@@ -166,22 +166,22 @@ function ResetPasswordContent() {
   }
 
   // ============================================================
-  // 🔥 RESET PASSWORD FORM - PRO MAX!
+  // 🔥 RESET PASSWORD FORM - SOFT BLUE BACKGROUND!
   // ============================================================
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-100 via-blue-100 to-indigo-100 p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50 p-4 relative overflow-hidden">
       
-      {/* 🔥 Decorative Background Elements */}
+      {/* 🔥 Decorative Background Elements - Soft */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-sky-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000" />
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-indigo-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000" />
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-sky-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000" />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-15 animate-blob animation-delay-4000" />
         
-        {/* 🔥 Floating Icons */}
-        <div className="absolute top-10 left-10 text-sky-200/20 animate-float hidden lg:block">
+        {/* 🔥 Floating Icons - Soft */}
+        <div className="absolute top-10 left-10 text-blue-200/20 animate-float hidden lg:block">
           <Lock className="h-16 w-16" />
         </div>
-        <div className="absolute bottom-10 right-10 text-blue-200/20 animate-float animation-delay-3000 hidden lg:block">
+        <div className="absolute bottom-10 right-10 text-sky-200/20 animate-float animation-delay-3000 hidden lg:block">
           <Shield className="h-20 w-20" />
         </div>
         <div className="absolute top-1/2 left-5 text-indigo-200/10 animate-float animation-delay-1000 hidden lg:block">
@@ -191,12 +191,12 @@ function ResetPasswordContent() {
 
       {/* 🔥 Main Card */}
       <Card 
-        className="w-full max-w-md shadow-2xl border-0 bg-white/90 backdrop-blur-xl relative z-10 animate-fadeIn rounded-2xl overflow-hidden"
+        className="w-full max-w-md shadow-2xl border-0 bg-white/95 backdrop-blur-xl relative z-10 animate-fadeIn rounded-2xl overflow-hidden"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Top Gradient Bar */}
-        <div className="h-1.5 w-full bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500" />
+        {/* Top Gradient Bar - Soft */}
+        <div className="h-1.5 w-full bg-gradient-to-r from-sky-400 via-blue-400 to-indigo-400" />
         
         <CardHeader className="text-center pt-8 pb-4">
           <div className="mx-auto p-3 bg-gradient-to-br from-sky-500 to-blue-600 rounded-2xl w-20 h-20 flex items-center justify-center shadow-lg shadow-blue-500/30 animate-pulse-soft">
@@ -205,7 +205,7 @@ function ResetPasswordContent() {
           <CardTitle className="text-2xl font-bold bg-gradient-to-r from-sky-700 to-blue-700 bg-clip-text text-transparent">
             Create New Password
           </CardTitle>
-          <CardDescription className="text-gray-600">
+          <CardDescription className="text-gray-500">
             Enter your new password below. Make sure it's strong and secure.
           </CardDescription>
         </CardHeader>
@@ -444,7 +444,7 @@ export default function ResetPasswordPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-100 via-blue-100 to-indigo-100 p-4">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50 p-4">
           <div className="text-center">
             <Loader2 className="h-10 w-10 animate-spin text-sky-600 mx-auto" />
             <p className="text-gray-600 mt-4">Loading...</p>
