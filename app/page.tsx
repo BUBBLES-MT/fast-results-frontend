@@ -38,12 +38,19 @@ import {
 import { cn } from "@/lib/utils";
 
 // ============================================================
-// 🔥 API BASE - FIXED FOR PRODUCTION!
+// 🔥 API BASE - SMART DETECTION!
 // ============================================================
-// ✅ TUMIA HARDCODED URL KWA PRODUCTION
-const API_BASE = process.env.NODE_ENV === 'production' 
-  ? "https://fast-results-backend-ewis.onrender.com" 
-  : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000");
+// ✅ KWA LIVE (Vercel) - Tumia URL ya Render
+// ✅ KWA LOCAL - Tumia localhost:8000
+const API_BASE = (() => {
+  // Kama iko kwenye Vercel (production)
+  if (process.env.NEXT_PUBLIC_VERCEL_ENV === 'production' || 
+      process.env.NODE_ENV === 'production') {
+    return process.env.NEXT_PUBLIC_API_URL || "https://fast-results-backend-ewis.onrender.com";
+  }
+  // Kama iko local
+  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+})();
 
 // ============================================================
 // 🔥 TYPING EFFECT WORDS
