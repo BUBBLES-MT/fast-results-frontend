@@ -38,19 +38,22 @@ import {
 import { cn } from "@/lib/utils";
 
 // ============================================================
-// 🔥 API BASE
+// 🔥 API BASE - FIXED FOR PRODUCTION!
 // ============================================================
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// ✅ TUMIA HARDCODED URL KWA PRODUCTION
+const API_BASE = process.env.NODE_ENV === 'production' 
+  ? "https://fast-results-backend-ewis.onrender.com" 
+  : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000");
 
 // ============================================================
 // 🔥 TYPING EFFECT WORDS
 // ============================================================
 const TYPING_WORDS = [
-  "📊 Fast & Accurate Results",
-  "🏆 Excellence in Education",
-  "📈 Track Student Performance",
-  "👨‍🏫 Empowering Teachers",
-  "🎓 Shaping Future Leaders",
+  "Fast & Accurate Results",
+  "Excellence in Education",
+  "Track Student Performance",
+  "Empowering Teachers",
+  "Shaping Future Leaders",
 ];
 
 // ============================================================
@@ -202,7 +205,7 @@ function MobileHeader() {
 }
 
 // ============================================================
-// 🔥 HERO SECTION - PRO MAX, ILIYOPUNGUZWA UKUBWA!
+// 🔥 HERO SECTION - PRO MAX
 // ============================================================
 
 function HeroSection() {
@@ -223,18 +226,18 @@ function HeroSection() {
             MASI FAST RESULTS
           </div>
 
-          {/* Main Title - Big and Readable */}
+          {/* Main Title */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2 sm:mb-3 animate-fadeIn animation-delay-200 leading-tight">
             Fast & Accurate
             <span className="block text-sky-200">Student Results</span>
           </h1>
 
-          {/* Typing Effect - Professional */}
+          {/* Typing Effect */}
           <div className="mb-3 sm:mb-4 animate-fadeIn animation-delay-400">
             <TypingEffect />
           </div>
 
-          {/* Description - Clear and Readable for Parents */}
+          {/* Description */}
           <p className="text-white/90 text-sm sm:text-base md:text-lg max-w-2xl mx-auto px-2 animate-fadeIn animation-delay-600 leading-relaxed">
             A modern platform for teachers, parents, and students to track 
             academic progress quickly and accurately.
@@ -269,7 +272,7 @@ function HeroSection() {
 }
 
 // ============================================================
-// 🔥 FEATURE CARD - PRO MAX!
+// 🔥 FEATURE CARD
 // ============================================================
 
 function FeatureCard({ icon, title, description, color = "sky" }: { icon: React.ReactNode; title: string; description: string; color?: "sky" | "emerald" | "purple" | "amber" | "rose" | "indigo" }) {
@@ -302,7 +305,7 @@ function FeatureCard({ icon, title, description, color = "sky" }: { icon: React.
 }
 
 // ============================================================
-// 🔥 LOGIN CARD - PRO MAX!
+// 🔥 LOGIN CARD
 // ============================================================
 
 function LoginCard({ 
@@ -314,7 +317,6 @@ function LoginCard({
   registerHref, 
   loginLabel, 
   registerLabel,
-  color = "sky"
 }: { 
   title: string;
   description: string;
@@ -324,7 +326,6 @@ function LoginCard({
   registerHref: string;
   loginLabel: string;
   registerLabel: string;
-  color?: "sky" | "emerald";
 }) {
   return (
     <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-xl hover:shadow-3xl transition-all duration-500 hover:-translate-y-2 group">
@@ -371,7 +372,7 @@ export default function HomePage() {
       <MobileHeader />
 
       <main>
-        {/* Hero Section - PRO MAX, ILIYOPUNGUZWA! */}
+        {/* Hero Section */}
         <HeroSection />
 
         {/* Features Section */}
@@ -440,7 +441,6 @@ export default function HomePage() {
               registerHref="/register"
               loginLabel="Login as Teacher"
               registerLabel="Register as Teacher"
-              color="sky"
             />
             <LoginCard
               title="Mzazi / Mlezi"
@@ -451,12 +451,11 @@ export default function HomePage() {
               registerHref="/parent/register"
               loginLabel="Ingia kama Mzazi"
               registerLabel="Jisajili kama Mzazi"
-              color="emerald"
             />
           </div>
         </section>
 
-        {/* CTA Section - PRO MAX */}
+        {/* CTA Section */}
         <section className="bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-700 py-10 sm:py-16">
           <div className="max-w-7xl mx-auto px-3 sm:px-4 text-center">
             <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 sm:px-5 py-1.5 sm:py-2 rounded-full text-white text-sm sm:text-base font-medium mb-4 sm:mb-5">
