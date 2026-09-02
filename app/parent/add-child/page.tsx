@@ -1,5 +1,5 @@
 // app/parent/add-child/page.tsx
-// 🔥 VERSION 2.0 - PRO MAX WITH MOBILE FIRST DESIGN!
+// 🔥 VERSION 3.0 - KISWAHILI PRO MAX WITH MOBILE FIRST DESIGN!
 
 "use client";
 
@@ -104,13 +104,13 @@ interface Child {
 }
 
 // ============================================================
-// 🔥 TYPING EFFECT WORDS
+// 🔥 TYPING EFFECT WORDS - KISWAHILI
 // ============================================================
 const TYPING_WORDS = [
-  "👨‍👧‍👦 Connect with your child",
-  "📚 Track academic progress",
-  "🏆 Celebrate achievements",
-  "❤️ Stay involved in education",
+  "👨‍👧‍👦 Unganisha na mtoto wako",
+  "📚 Fuatilia maendeleo ya kitaaluma",
+  "🏆 Sherehekea mafanikio",
+  "❤️ Shirikishwa katika elimu",
 ];
 
 // ============================================================
@@ -225,21 +225,22 @@ function MobileAlert({
 }
 
 // ============================================================
-// 🔥 STAT CARD
+// 🔥 STAT CARD - IMEPANULIWA NA KUBADILISHWA
 // ============================================================
 
-function StatCard({ label, value, icon: Icon, color = "sky" }: { label: string; value: string | number; icon: any; color?: "sky" | "emerald" | "purple" | "amber" | "rose" }) {
+function StatCard({ label, value, icon: Icon, color = "sky" }: { label: string; value: string | number; icon: any; color?: "sky" | "emerald" | "purple" | "amber" | "rose" | "indigo" }) {
   const colors = {
     sky: "from-sky-500 to-blue-500",
     emerald: "from-emerald-500 to-teal-500",
     purple: "from-purple-500 to-pink-500",
     amber: "from-amber-500 to-orange-500",
     rose: "from-rose-500 to-pink-500",
+    indigo: "from-indigo-500 to-purple-600",
   };
 
   return (
     <div className={cn(
-      "rounded-2xl p-4 text-white shadow-xl",
+      "rounded-2xl p-5 sm:p-6 text-white shadow-xl min-h-[100px] sm:min-h-[120px] flex flex-col justify-between",
       "bg-gradient-to-r",
       colors[color]
     )}>
@@ -248,14 +249,14 @@ function StatCard({ label, value, icon: Icon, color = "sky" }: { label: string; 
           <p className="text-[10px] sm:text-xs font-medium text-white/80 uppercase tracking-wider">
             {label}
           </p>
-          <p className="text-2xl sm:text-3xl font-bold mt-0.5">{value}</p>
+          <p className="text-2xl sm:text-3xl md:text-4xl font-bold mt-1">{value}</p>
         </div>
-        <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
-          <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+        <div className="bg-white/20 p-2.5 rounded-xl backdrop-blur-sm">
+          <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
         </div>
       </div>
-      <div className="mt-2 h-0.5 w-full bg-white/20 rounded-full overflow-hidden">
-        <div className="h-full w-1/2 bg-white/40 rounded-full animate-pulse-soft" />
+      <div className="mt-3 h-1 w-full bg-white/20 rounded-full overflow-hidden">
+        <div className="h-full w-2/3 bg-white/40 rounded-full animate-pulse-soft" />
       </div>
     </div>
   );
@@ -288,6 +289,9 @@ export default function ParentAddChildPage() {
 
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [relationship, setRelationship] = useState("Biological");
+
+  // Get current year
+  const currentYear = new Date().getFullYear();
 
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
   const userType = typeof window !== "undefined" ? localStorage.getItem("user_type") : null;
@@ -555,7 +559,7 @@ export default function ParentAddChildPage() {
             <div className="absolute inset-0 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 blur-xl opacity-50 animate-pulse" />
             <Loader2 className="h-12 w-12 animate-spin text-emerald-600 relative z-10" />
           </div>
-          <p className="text-gray-600 mt-4 text-sm sm:text-base animate-pulse">Loading...</p>
+          <p className="text-gray-600 mt-4 text-sm sm:text-base animate-pulse">Inapakia...</p>
         </div>
       </div>
     );
@@ -579,10 +583,10 @@ export default function ParentAddChildPage() {
             <div className="text-center sm:text-left">
               <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-white text-xs sm:text-sm font-medium mb-2 sm:mb-3">
                 <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
-                Parent Portal
+                Lango la Mzazi
               </div>
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">
-                Add Your Child
+                Ongeza Mtoto Wako
               </h1>
               <div className="mt-1">
                 <TypingEffect />
@@ -591,12 +595,12 @@ export default function ParentAddChildPage() {
             <div className="flex items-center gap-3">
               <Badge className="bg-white/20 backdrop-blur-sm text-white border-0 px-3 py-1.5 text-sm">
                 <Heart className="h-3.5 w-3.5 mr-1.5" />
-                {children.length} Children
+                {children.length} Watoto
               </Badge>
               <Link href="/parent/dashboard">
                 <Button className="bg-white/20 backdrop-blur-sm text-white border-2 border-white/30 hover:bg-white/30 gap-2 rounded-xl h-9 sm:h-10 text-sm touch-feedback">
                   <Home className="h-4 w-4" />
-                  <span className="hidden sm:inline">Dashboard</span>
+                  <span className="hidden sm:inline">Dashibodi</span>
                 </Button>
               </Link>
             </div>
@@ -610,12 +614,13 @@ export default function ParentAddChildPage() {
         {success && <MobileAlert type="success" message={success} onClose={() => setSuccess("")} />}
         {error && <MobileAlert type="error" message={error} onClose={() => setError("")} />}
 
-        {/* Stats Cards */}
+        {/* Stats Cards - Zimepanuliwa na kubadilishwa */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
           <StatCard label="Watoto" value={children.length} icon={Heart} color="emerald" />
-          <StatCard label="Schools" value={schools.length} icon={School} color="sky" />
-          <StatCard label="Search Results" value={searchResults.length} icon={Search} color="purple" />
-          <StatCard label="Status" value={children.length > 0 ? "✅ Active" : "📝 Pending"} icon={CheckCircle} color="amber" />
+          {/* 👇 HII CARD SASA INAONYESHA MWAKA WA SASA BADALA YA IDADI YA SHULE */}
+          <StatCard label="Mwaka wa Sasa" value={currentYear} icon={Calendar} color="indigo" />
+          <StatCard label="Matokeo ya Utafutaji" value={searchResults.length} icon={Search} color="purple" />
+          <StatCard label="Hali" value={children.length > 0 ? "✅ Imewekwa" : "📝 Inasubiri"} icon={CheckCircle} color="amber" />
         </div>
 
         {/* Children List */}
@@ -625,7 +630,7 @@ export default function ParentAddChildPage() {
             <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-emerald-50 to-teal-50">
               <CardTitle className="flex items-center gap-2 text-base sm:text-xl text-emerald-800">
                 <Heart className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" />
-                <span className="text-sm sm:text-base">My Children ({children.length})</span>
+                <span className="text-sm sm:text-base">Watoto Wangu ({children.length})</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 sm:p-6 pt-0">
@@ -673,10 +678,10 @@ export default function ParentAddChildPage() {
           <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-blue-50 to-purple-50">
             <CardTitle className="flex items-center gap-2 text-base sm:text-xl">
               <Search className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
-              <span className="text-sm sm:text-base text-gray-800">Find Your Child</span>
+              <span className="text-sm sm:text-base text-gray-800">Tafuta Mtoto Wako</span>
             </CardTitle>
             <CardDescription className="text-xs sm:text-sm text-gray-600">
-              Select school type, then choose your child's school and class to find and add them
+              Chagua aina ya shule, kisha chagua shule na darasa la mtoto wako ili kumtafuta na kumuongeza
             </CardDescription>
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-0">
@@ -685,15 +690,15 @@ export default function ParentAddChildPage() {
               <div className="space-y-1.5 sm:space-y-2">
                 <Label className="text-gray-700 font-medium flex items-center gap-2 text-sm">
                   <School className="h-4 w-4 text-emerald-600" />
-                  School Type *
+                  Aina ya Shule *
                 </Label>
                 <Select value={schoolLevel} onValueChange={handleSchoolLevelChange}>
                   <SelectTrigger className="bg-white border-emerald-200 focus:ring-2 focus:ring-emerald-500 rounded-xl h-10 sm:h-11 text-sm">
-                    <SelectValue placeholder="Select school type" />
+                    <SelectValue placeholder="Chagua aina ya shule" />
                   </SelectTrigger>
                   <SelectContent className="bg-white border-emerald-200 shadow-lg rounded-xl">
-                    <SelectItem value="primary">🏫 Primary School</SelectItem>
-                    <SelectItem value="secondary">📚 Secondary School</SelectItem>
+                    <SelectItem value="primary">🏫 Shule ya Msingi</SelectItem>
+                    <SelectItem value="secondary">📚 Shule ya Sekondari</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -702,18 +707,18 @@ export default function ParentAddChildPage() {
               <div className="space-y-1.5 sm:space-y-2">
                 <Label className="text-gray-700 font-medium flex items-center gap-2 text-sm">
                   <Building2 className="h-4 w-4 text-blue-600" />
-                  Select School *
+                  Chagua Shule *
                 </Label>
                 <Select value={selectedSchoolId} onValueChange={handleSchoolChange}>
                   <SelectTrigger className={cn(
                     "bg-white border-blue-200 focus:ring-2 focus:ring-blue-500 rounded-xl h-10 sm:h-11 text-sm",
                     filteredSchools.length === 0 && "opacity-50"
                   )}>
-                    <SelectValue placeholder={filteredSchools.length === 0 ? "No schools available" : "Select school"} />
+                    <SelectValue placeholder={filteredSchools.length === 0 ? "Hakuna shule" : "Chagua shule"} />
                   </SelectTrigger>
                   <SelectContent className="bg-white border-blue-200 shadow-lg rounded-xl max-h-60">
                     {filteredSchools.length === 0 ? (
-                      <SelectItem value="none" disabled>No schools found</SelectItem>
+                      <SelectItem value="none" disabled>Hakuna shule zilizopatikana</SelectItem>
                     ) : (
                       filteredSchools.map((school) => (
                         <SelectItem key={school.id} value={school.id.toString()}>
@@ -731,18 +736,18 @@ export default function ParentAddChildPage() {
                   <div className="space-y-1.5 sm:space-y-2">
                     <Label className="text-gray-700 font-medium flex items-center gap-2 text-sm">
                       <GraduationCap className="h-4 w-4 text-purple-600" />
-                      Class *
+                      Darasa *
                     </Label>
                     <Select value={selectedClass} onValueChange={handleClassChange} disabled={classes.length === 0}>
                       <SelectTrigger className={cn(
                         "bg-white border-purple-200 focus:ring-2 focus:ring-purple-500 rounded-xl h-10 sm:h-11 text-sm",
                         classes.length === 0 && "opacity-50"
                       )}>
-                        <SelectValue placeholder={classes.length === 0 ? "No classes" : "Select class"} />
+                        <SelectValue placeholder={classes.length === 0 ? "Hakuna madarasa" : "Chagua darasa"} />
                       </SelectTrigger>
                       <SelectContent className="bg-white border-purple-200 shadow-lg rounded-xl max-h-60">
                         {classes.length === 0 ? (
-                          <SelectItem value="none" disabled>No classes available</SelectItem>
+                          <SelectItem value="none" disabled>Hakuna madarasa yaliyopatikana</SelectItem>
                         ) : (
                           classes.map((cls) => (
                             <SelectItem key={cls.id} value={cls.id.toString()}>
@@ -757,17 +762,17 @@ export default function ParentAddChildPage() {
                   <div className="space-y-1.5 sm:space-y-2">
                     <Label className="text-gray-700 font-medium flex items-center gap-2 text-sm">
                       <BookOpen className="h-4 w-4 text-amber-600" />
-                      Stream (Optional)
+                      Mchepuo (Si Lazima)
                     </Label>
                     <Select value={selectedStream} onValueChange={setSelectedStream} disabled={!selectedClass}>
                       <SelectTrigger className={cn(
                         "bg-white border-amber-200 focus:ring-2 focus:ring-amber-500 rounded-xl h-10 sm:h-11 text-sm",
                         !selectedClass && "opacity-50"
                       )}>
-                        <SelectValue placeholder="All streams" />
+                        <SelectValue placeholder="Michepuo yote" />
                       </SelectTrigger>
                       <SelectContent className="bg-white border-amber-200 shadow-lg rounded-xl max-h-60">
-                        <SelectItem value="all">All Streams</SelectItem>
+                        <SelectItem value="all">Michepuo Yote</SelectItem>
                         {streams.map((stream) => (
                           <SelectItem key={stream.id} value={stream.id.toString()}>
                             {stream.name}
@@ -780,10 +785,10 @@ export default function ParentAddChildPage() {
                   <div className="space-y-1.5 sm:space-y-2">
                     <Label className="text-gray-700 font-medium flex items-center gap-2 text-sm">
                       <Zap className="h-4 w-4 text-cyan-600" />
-                      Roll Number (Optional)
+                      Namba ya Mwanafunzi (Si Lazima)
                     </Label>
                     <Input
-                      placeholder="Enter roll number"
+                      placeholder="Weka namba ya mwanafunzi"
                       value={rollNumber}
                       onChange={(e) => setRollNumber(e.target.value)}
                       className="bg-white border-cyan-200 focus:ring-2 focus:ring-cyan-500 rounded-xl h-10 sm:h-11 text-sm"
@@ -803,7 +808,7 @@ export default function ParentAddChildPage() {
                 ) : (
                   <Search className="h-4 w-4 mr-2" />
                 )}
-                Search Students
+                Tafuta Wanafunzi
               </Button>
 
               {/* Search Results */}
@@ -811,13 +816,13 @@ export default function ParentAddChildPage() {
                 <div className="mt-4 sm:mt-6 animate-slideIn">
                   <h3 className="font-semibold text-gray-700 mb-2 sm:mb-3 text-sm sm:text-base flex items-center gap-2">
                     <Users className="h-4 w-4 text-indigo-600" />
-                    Results ({searchResults.length})
+                    Matokeo ({searchResults.length})
                   </h3>
 
                   {searchResults.length > 1 && (
                     <p className="text-[10px] sm:text-xs text-amber-600 mb-3 flex items-center gap-1">
                       <span className="text-base">👆</span>
-                      Select one student to add to your account
+                      Chagua mwanafunzi mmoja ili kumuongeza kwenye akaunti yako
                     </p>
                   )}
 
@@ -845,14 +850,14 @@ export default function ParentAddChildPage() {
                               {student.name}
                             </p>
                             <p className="text-[10px] sm:text-xs text-gray-500 truncate">
-                              {student.class_name} {student.stream_name} • Roll: {student.roll_number || "-"}
+                              {student.class_name} {student.stream_name} • Namba: {student.roll_number || "-"}
                             </p>
                           </div>
                         </div>
                         {selectedStudent?.id === student.id && (
                           <Badge className="bg-emerald-500 text-white text-[10px] sm:text-xs flex-shrink-0 border-0">
                             <CheckCircle className="h-3 w-3 mr-1" />
-                            Selected
+                            Imechaguliwa
                           </Badge>
                         )}
                       </div>
@@ -866,17 +871,17 @@ export default function ParentAddChildPage() {
                         <div className="w-full sm:flex-1">
                           <Label className="text-gray-700 font-medium text-sm flex items-center gap-2">
                             <Heart className="h-4 w-4 text-rose-500" />
-                            Relationship
+                            Uhusiano
                           </Label>
                           <Select value={relationship} onValueChange={setRelationship}>
                             <SelectTrigger className="bg-white border-gray-200 focus:ring-2 focus:ring-emerald-500 rounded-xl h-9 sm:h-10 text-sm">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="bg-white border-gray-200 shadow-lg rounded-xl">
-                              <SelectItem value="Biological">❤️ Biological Parent</SelectItem>
-                              <SelectItem value="Guardian">👨‍👦 Guardian</SelectItem>
-                              <SelectItem value="Step Parent">👨‍👩‍👦 Step Parent</SelectItem>
-                              <SelectItem value="Other">🤝 Other</SelectItem>
+                              <SelectItem value="Biological">❤️ Mzazi wa Kawaida</SelectItem>
+                              <SelectItem value="Guardian">👨‍👦 Mlezi</SelectItem>
+                              <SelectItem value="Step Parent">👨‍👩‍👦 Mzazi wa Kambo</SelectItem>
+                              <SelectItem value="Other">🤝 Mwingine</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -890,7 +895,7 @@ export default function ParentAddChildPage() {
                           ) : (
                             <Plus className="h-4 w-4" />
                           )}
-                          Add Child
+                          Ongeza Mtoto
                         </Button>
                       </div>
                     </div>
@@ -907,11 +912,11 @@ export default function ParentAddChildPage() {
         <div className="max-w-7xl mx-auto px-3 sm:px-4 text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Heart className="h-4 w-4 text-emerald-400" />
-            <span className="font-bold text-sm sm:text-base text-emerald-400">MASI FAST RESULTS</span>
+            <span className="font-bold text-sm sm:text-base text-emerald-400">MASI MATOKEO HARAKA</span>
           </div>
-          <p className="text-gray-400 text-xs sm:text-sm">Parent Portal • Connect with Your Child</p>
+          <p className="text-gray-400 text-xs sm:text-sm">Lango la Mzazi • Unganisha na Mtoto Wako</p>
           <p className="text-gray-600 text-[10px] sm:text-xs mt-2">
-            &copy; {new Date().getFullYear()} MASI FAST RESULTS SYSTEM. All rights reserved.
+            &copy; {new Date().getFullYear()} MFUMO WA MATOKEO HARAKA MASI. Haki zote zimehifadhiwa.
           </p>
         </div>
       </footer>

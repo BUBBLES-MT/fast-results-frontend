@@ -324,7 +324,6 @@ function PasswordSection({
             onChange={onConfirmChange}
             className={cn(
               "bg-white border-gray-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 pr-10 h-9 sm:h-10 md:h-11 text-sm md:text-base",
-              // 🔥 GREEN if passwords match, RED if they don't!
               passwordsMatch && "border-emerald-500 ring-2 ring-emerald-200",
               passwordsDontMatch && "border-red-500 ring-2 ring-red-200"
             )}
@@ -343,7 +342,7 @@ function PasswordSection({
           </button>
         </div>
         
-        {/* 🔥 Match Status Indicator */}
+        {/* Match Status Indicator */}
         {confirmPassword.length > 0 && (
           <div className="flex items-center gap-1.5 mt-1">
             {passwordsMatch ? (
@@ -454,8 +453,8 @@ function AuthContent() {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [loginError, setLoginError] = useState("");
-  const [loginSuccess, setLoginSuccess] = useState("");
+  const [loginError, setLoginError] = useState<string>("");
+  const [loginSuccess, setLoginSuccess] = useState<string>("");
   const [loginLoading, setLoginLoading] = useState(false);
   
   // ✅ SUBSCRIPTION EXPIRED
@@ -485,8 +484,8 @@ function AuthContent() {
     role: "Teacher",
     phone1: "",
   });
-  const [registerError, setRegisterError] = useState("");
-  const [registerSuccess, setRegisterSuccess] = useState("");
+  const [registerError, setRegisterError] = useState<string>("");
+  const [registerSuccess, setRegisterSuccess] = useState<string>("");
   const [registerLoading, setRegisterLoading] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   
@@ -617,7 +616,7 @@ function AuthContent() {
   };
 
   // ============================================================
-  // 🔥 LOGIN
+  // 🔥 LOGIN - FIXED VERSION
   // ============================================================
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -634,12 +633,15 @@ function AuthContent() {
 
       const data = await response.json();
 
+      // 🔥 CHECK FOR 402 - SUBSCRIPTION EXPIRED
       if (response.status === 402) {
-        const detail = data.detail;
+        // ✅ SAFELY extract from detail object
+        const detail = data.detail || {};
         
-        const schoolId = detail.school_id || detail.schoolId;
+        // ✅ SAFELY extract values with fallbacks
+        const schoolId = detail.school_id || detail.schoolId || null;
         const schoolName = detail.school_name || detail.schoolName || "Shule yako";
-        const expiryDate = detail.expiry_date || detail.expiryDate || "tarehe haijulikani";
+        const expiryDate = detail.expiry_date || detail.expiryDate || new Date().toISOString();
         
         console.log("🔴 Subscription Expired Response:", { schoolId, schoolName, expiryDate });
         
@@ -657,19 +659,32 @@ function AuthContent() {
         });
         setShowExpiredDialog(true);
         setRedirectCountdown(5);
-        setLoginError("");
+        setLoginError(""); // ✅ Clear error - use dialog instead
         setLoginLoading(false);
         return;
       }
 
+      // ✅ CHECK FOR OTHER ERRORS
       if (!response.ok) {
-        let errorMessage = "Login failed";
-        if (typeof data.detail === "string") errorMessage = data.detail;
-        else if (data.detail?.message) errorMessage = data.detail.message;
-        else if (data.message) errorMessage = data.message;
+        let errorMessage = "Login failed. Please check your credentials.";
+        
+        // ✅ SAFELY extract error message
+        if (typeof data.detail === "string") {
+          errorMessage = data.detail;
+        } else if (data.detail?.message) {
+          errorMessage = data.detail.message;
+        } else if (data.message) {
+          errorMessage = data.message;
+        } else if (typeof data.detail === "object") {
+          // ✅ If detail is object, log it and use generic message
+          console.error("Error detail object:", data.detail);
+          errorMessage = "Login failed. Please check your credentials.";
+        }
+        
         throw new Error(errorMessage);
       }
 
+      // ✅ SUCCESSFUL LOGIN
       const { access_token, user_type, name, user_id, role, school_level, school_id } = data;
 
       localStorage.clear();
@@ -739,6 +754,7 @@ function AuthContent() {
       }
       
     } catch (err: any) {
+      // ✅ SAFELY set error message
       setLoginError(err.message || "Login failed. Please check your credentials.");
     } finally {
       setLoginLoading(false);
@@ -978,7 +994,7 @@ function AuthContent() {
             MASI FAST RESULTS
           </CardTitle>
           
-          {/* 🔥🔥🔥 TYPING EFFECT - HERE! 🔥🔥🔥 */}
+          {/* TYPING EFFECT - HERE! */}
           <div className="mt-2 sm:mt-3">
             <TypingEffect />
           </div>
@@ -1058,7 +1074,7 @@ function AuthContent() {
                   </div>
                 </div>
 
-                {/* 🔥 Small Round Checkbox - Fixed! */}
+                {/* Small Round Checkbox - Fixed! */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -1094,7 +1110,8 @@ function AuthContent() {
                   </button>
                 </div>
 
-                {loginError && (
+                {/* ✅ SAFE ERROR RENDERING - FIXED! */}
+                {loginError && typeof loginError === 'string' && (
                   <div className="bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg flex items-center gap-2 text-xs sm:text-sm">
                     <AlertCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
                     <span className="break-words">{loginError}</span>
@@ -1288,7 +1305,7 @@ function AuthContent() {
                   />
                 </div>
 
-                {/* 🔥🔥🔥 NEW PASSWORD SECTION WITH STRENGTH INDICATOR 🔥🔥🔥 */}
+                {/* NEW PASSWORD SECTION WITH STRENGTH INDICATOR */}
                 <PasswordSection
                   password={registerData.password}
                   confirmPassword={registerData.confirmPassword}
@@ -1298,7 +1315,8 @@ function AuthContent() {
                   onConfirmChange={handleConfirmChange}
                 />
 
-                {registerError && (
+                {/* ✅ SAFE ERROR RENDERING - FIXED! */}
+                {registerError && typeof registerError === 'string' && (
                   <div className="bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg flex items-center gap-2 text-xs sm:text-sm">
                     <AlertCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
                     <span className="break-words">{registerError}</span>
@@ -1496,7 +1514,7 @@ function AuthContent() {
         .animation-delay-3000 { animation-delay: 3s; }
         .animation-delay-4000 { animation-delay: 4s; }
         
-        /* 🔥 RESPONSIVE BREAKPOINTS */
+        /* RESPONSIVE BREAKPOINTS */
         @media (max-width: 400px) {
           .xs\\:inline { display: inline !important; }
           .xs\\:hidden { display: none !important; }
