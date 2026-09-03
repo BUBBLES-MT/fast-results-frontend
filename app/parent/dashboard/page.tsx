@@ -135,12 +135,12 @@ type ViewMode = "term" | "individual";
 // ============================================================
 const TYPING_WORDS = [
   "👇 Bonyeza kitufe cha BLUE kuona matokeo ya mtoto wako",
-  "📊 Tazama alama na daraja la kila somo",
-  "📈 Fuatilia maendeleo ya mtoto wako shuleni",
-  "📅 Angalia tarehe za kufunga na kufungua shule",
-  "📢 Pata taarifa na tangazo la shule",
-  "👨‍👩‍👧‍👦 Shirikiana na walimu kumsaidia mtoto",
-  "⭐ Kila mtoto ana uwezo wa kufaulu",
+  "Tazama alama na daraja la kila somo",
+  "Fuatilia maendeleo ya mtoto wako shuleni",
+  "Angalia tarehe za kufunga na kufungua shule",
+  "Pata taarifa na tangazo la shule",
+  "Shirikiana na walimu kumsaidia mtoto",
+  "Kila mtoto ana uwezo wa kufaulu",
 ];
 
 function TypingEffect() {

@@ -187,12 +187,12 @@ function MobileAlert({
 // ============================================================
 const getRoleDisplay = (role: string): { icon: string; text: string } => {
   const roleMap: Record<string, { icon: string; text: string }> = {
-    Mwalimu: { icon: "👨‍🏫", text: "Umeingia kama Mwalimu" },
-    Mtaaluma: { icon: "📚", text: "Umeingia kama Mtaaluma" },
-    "Mwalimu Mkuu": { icon: "👨‍💼", text: "Umeingia kama Mwalimu Mkuu" },
-    "Mwalimu Mkuu Msaidizi": { icon: "👩‍💼", text: "Umeingia kama Mwalimu Mkuu Msaidizi" },
+    Mwalimu: { icon: "", text: "Umeingia kama Mwalimu" },
+    Mtaaluma: { icon: "", text: "Umeingia kama Mtaaluma" },
+    "Mwalimu Mkuu": { icon: "", text: "Umeingia kama Mwalimu Mkuu" },
+    "Mwalimu Mkuu Msaidizi": { icon: "", text: "Umeingia kama Mwalimu Mkuu Msaidizi" },
   };
-  return roleMap[role] || { icon: "📊", text: "Umeingia kama Mkuu wa Shule" };
+  return roleMap[role] || { icon: "", text: "Umeingia kama Mkuu wa Shule" };
 };
 
 // ============================================================
@@ -281,7 +281,7 @@ export default function PrimaryDashboardPage() {
           recent_activities:
             data.recent_activities?.length > 0
               ? data.recent_activities
-              : ["📊 Karibu kwenye dashibodi yako"],
+              : ["Karibu kwenye dashibodi yako"],
           upcoming_exams:
             data.upcoming_exams?.length > 0
               ? data.upcoming_exams.map((e: any) => e.name || "Mtihani ujao")

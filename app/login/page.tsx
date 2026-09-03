@@ -72,16 +72,16 @@ import { cn } from "@/lib/utils";
 // 🔥 TYPING EFFECT - WORDS TO DISPLAY
 // ============================================================
 const TYPING_WORDS = [
-  "📊 Fast & Accurate Results",
-  "🏆 Excellence in Education",
-  "📈 Track Student Performance",
-  "👨‍🏫 Empowering Teachers",
-  "🎓 Shaping Future Leaders",
-  "📚 Quality Education Management",
-  "⭐ Your Success Starts Here",
-  "💡 Innovative Learning Platform",
-  "🚀 Transforming Education",
-  "🌍 Building Better Futures",
+  "Fast & Accurate Results",
+  "Excellence in Education",
+  "Track Student Performance",
+  "Empowering Teachers",
+  "Shaping Future Leaders",
+  "Quality Education Management",
+  "Your Success Starts Here",
+  "Innovative Learning Platform",
+  " Transforming Education",
+  " Building Better Futures",
 ];
 
 // ============================================================
